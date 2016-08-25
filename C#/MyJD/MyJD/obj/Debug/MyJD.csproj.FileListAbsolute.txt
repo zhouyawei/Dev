@@ -143,6 +143,5 @@ E:\Dev\C#\MyJD\MyJD\bin\zh-Hans\Microsoft.Owin.Security.Facebook.resources.dll
 E:\Dev\C#\MyJD\MyJD\bin\zh-Hans\Microsoft.Owin.Security.Google.resources.dll
 E:\Dev\C#\MyJD\MyJD\bin\zh-Hans\Microsoft.Owin.Security.Twitter.resources.dll
 E:\Dev\C#\MyJD\MyJD\bin\zh-Hans\Microsoft.Owin.Security.MicrosoftAccount.resources.dll
-E:\Dev\C#\MyJD\MyJD\obj\Debug\MyJD.csprojResolveAssemblyReference.cache
 E:\Dev\C#\MyJD\MyJD\obj\Debug\MyJD.dll
 E:\Dev\C#\MyJD\MyJD\obj\Debug\MyJD.pdb
