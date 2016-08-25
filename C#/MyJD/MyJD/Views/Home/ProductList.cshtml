@@ -1,0 +1,48 @@
+﻿@model IEnumerable<MyJD.Models.Product>
+
+@{
+    var ajaxOptions = new AjaxOptions()
+    {
+        OnSuccess = "AddToCartSuccess",
+        OnFailure = "AddToCartFailure",
+        HttpMethod = "Post"
+    };
+}
+
+@section scripts{
+    @Scripts.Render("~/bundles/jqueryval")
+
+    <script>
+        function AddToCartSuccess() {
+            alert("添加购物车成功");
+        }
+
+        function AddToCartFailure(xhr) {
+            alert("添加购物车失败 (HTTP状态码: " + xhr.status + ")");
+        }
+
+    </script>
+
+}
+
+<h2>@Html.DisplayNameFor(model => model.ToList()[0])</h2>
+
+<h3>您正在浏览【@Model.First().ProductCategory.Name】分类的商品:</h3>
+
+<table>
+    <tr>
+        <th>@Html.DisplayNameFor(model => model.Name)</th>
+        <th>@Html.DisplayNameFor(model => model.Description)</th>
+        <th>@Html.DisplayNameFor(model => model.Price)</th>
+        <th>添加购物车</th>
+    </tr>
+    @foreach(var item in Model)
+    {
+        <tr>
+            <td>@Html.ActionLink(item.Name, "ProductDetail", new { id = item.Id })</td>
+            <td>@Html.DisplayFor(modelItem => item.Description)</td>
+            <td>@Html.DisplayFor(modelItem => item.Price)</td>
+            <td>@Ajax.ActionLink("添加购物车", "AddToCart", "Cart", new { ProductId = item.Id }, ajaxOptions)</td>
+        </tr>
+    }
+</table>
