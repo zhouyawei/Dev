@@ -29,10 +29,5 @@ namespace MyJD.Controllers
             return View();
         }
 
-        // GET: Order
-        public ActionResult Index()
-        {
-            return View();
-        }
     }
 }
