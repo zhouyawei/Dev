@@ -13,6 +13,8 @@ namespace MyJD.Controllers
         //首页
         public ActionResult Index()
         {
+            ViewBag.Title = "首页";
+
             var data = new List<ProductCategory>() 
             {
                 new ProductCategory() { Id = 1, Name = "文具"},

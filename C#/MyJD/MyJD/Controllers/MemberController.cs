@@ -13,13 +13,17 @@ namespace MyJD.Controllers
         //会员注册页面
         public ActionResult Register()
         {
+            ViewBag.Title = "会员注册";
             return View();
         }
 
         //写入会员信息
         [HttpPost]
-        public ActionResult Register(Member member)
+        public ActionResult Register(
+            [Bind(Exclude="RegisterOn,AuthCode")]
+            Member member)
         {
+            
             return View();
         }
 

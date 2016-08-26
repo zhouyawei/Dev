@@ -1,0 +1,63 @@
+﻿@model List<MyJD.Models.Cart>
+
+@{
+    ViewBag.Title = "Index";
+}
+
+@{
+    var ajaxOptions = new AjaxOptions()
+        {
+            OnSuccess = "RemoveCartSuccess",
+            OnFailure = "RemoveCartFailure",
+            Confirm = "您确定要从购物车删除这个商品吗？",
+            HttpMethod = "Post"
+        };
+}
+
+@section scripts{
+    @Scripts.Render("~/bundles/jqueryval")
+    <script>
+
+        function RemoveCartSuccess() {
+            alert("移除购物车项目成功");
+            location.reload();
+        }
+
+        function RemoveCartFailure(xhr) {
+            alert("移除购物车项目失败 (HTTP状态代码: " + xhr.status + ")");
+        }
+
+    </script>
+}
+
+<h2>购物车列表</h2>
+
+@using (Html.BeginForm("UpdateAmount", "Cart"))
+{
+    <p>
+        @Html.ActionLink("Create New", "Create")
+    </p>
+    <table class="table">
+        <tr>
+            <th>
+                @Html.DisplayNameFor(model => model.Amount)
+            </th>
+            <th></th>
+        </tr>
+
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Amount)
+                </td>
+                <td>
+                    @Html.ActionLink("Edit", "Edit", new { /* id=item.PrimaryKey */ }) |
+                    @Html.ActionLink("Details", "Details", new { /* id=item.PrimaryKey */ }) |
+                    @Html.ActionLink("Delete", "Delete", new { /* id=item.PrimaryKey */ })
+                </td>
+            </tr>
+        }
+
+    </table>
+}
