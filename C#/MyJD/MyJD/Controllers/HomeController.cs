@@ -40,7 +40,7 @@ namespace MyJD.Controllers
                     Id = 1, 
                     ProductCategory  = productCategoty, 
                     Name = "原子笔",
-                    Description = "圆珠笔 （Ball Point Pen），或称原子笔，是使用干稠性油墨，依靠笔头上自由转动的钢珠带出来转写到纸上的一种书写工具。圆珠笔具有结构简单、携带方便、书写润滑，且适宜于用来复写等优点，因而，从学校的学生到写字楼的文职人员等各界人士都乐于使用。圆珠笔是一种使用了微小旋转圆珠的笔，这种圆珠由黄铜、钢或者碳化钨制成，可在书写时将墨水释放到纸上。圆珠笔与它的前辈们——芦苇笔、羽毛笔、金属笔尖的笔和自来水笔差别很大",
+                    Description = "圆珠笔 （Ball Point Pen），或称原子笔，是使用干稠性油墨...",
                     Price = 30,
                     PublishOn = DateTime.Now,
                     Color = Color.Black
@@ -50,7 +50,7 @@ namespace MyJD.Controllers
                     Id = 2, 
                     ProductCategory  = productCategoty, 
                     Name = "铅笔",
-                    Description = "铅笔（Pencil），是一种用来书写以及绘画素描专用的笔类，距今已有四百多年的历史。其中，绘画素描的铅笔分为诸多类型",
+                    Description = "铅笔（Pencil），是一种用来书写以及绘画素描专用的笔类...",
                     Price = 5,
                     PublishOn = DateTime.Now,
                     Color = Color.Black
@@ -63,9 +63,24 @@ namespace MyJD.Controllers
         //商品明细
         public ActionResult ProductDetail(int id)
         {
+            var productCategory = new ProductCategory() 
+            {
+                Id = 1,
+                Name = "文具"
+            };
 
+            var data = new Product() 
+            {
+                Id = id,
+                ProductCategory = productCategory,
+                Name = "原子笔",
+                Description = "圆珠笔 （Ball Point Pen），或称原子笔，是使用干稠性油墨，依靠笔头上自由转动的钢珠带出来转写到纸上的一种书写工具。圆珠笔具有结构简单、携带方便、书写润滑，且适宜于用来复写等优点，因而，从学校的学生到写字楼的文职人员等各界人士都乐于使用。圆珠笔是一种使用了微小旋转圆珠的笔，这种圆珠由黄铜、钢或者碳化钨制成，可在书写时将墨水释放到纸上。圆珠笔与它的前辈们——芦苇笔、羽毛笔、金属笔尖的笔和自来水笔差别很大",
+                Price = 30,
+                PublishOn = DateTime.Now,
+                Color = Color.Black
+            };
 
-            return View();
+            return View(data);
         }
     }
 }

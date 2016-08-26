@@ -237,11 +237,11 @@
     <Content Include="Views\Home\Index.cshtml" />
     <Content Include="Views\Home\ProductList.cshtml" />
     <Content Include="Views\Home\ProductDetail.cshtml" />
+    <Content Include="Views\Member\Register.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
     <Folder Include="Views\Cart\" />
-    <Folder Include="Views\Member\" />
     <Folder Include="Views\Order\" />
   </ItemGroup>
   <ItemGroup>
