@@ -34,29 +34,35 @@
 
 @using (Html.BeginForm("UpdateAmount", "Cart"))
 {
-    <p>
-        @Html.ActionLink("Create New", "Create")
-    </p>
     <table class="table">
         <tr>
-            <th>
-                @Html.DisplayNameFor(model => model.Amount)
-            </th>
+            <th>产品名称</th>
+            <th>单价</th>
+            <th>数量</th>
+            <th>小计</th>
             <th></th>
         </tr>
 
-        @foreach (var item in Model)
+        @{ decimal subTotal = 0;}
+        @for (int i = 0; i < Model.Count; i++)
         {
+            //计算购买商品总价
+            subTotal += Model[i].Product.Price;
+
+            //选择商品数量的菜单只能选择1~10
+            var ddlAmountList = new SelectList(Enumerable.Range(1, 10), Model[i].Amount)
+            
+            @Html.HiddenFor(modelItem => Model[i].Product.Id)
+                
             <tr>
+                <td>@Html.DisplayFor(modelItem => Model[i].Product.Name)</td>
+                <td>NT$ @(Model[i].Product.Price) </td>
+                <td>@Html.DropDownListFor(modelItem => Model[i], ddlAmountList)</td>
+                <td>NT$ @(Model[i].Product.Price * Model[i].Amount)</td>
                 <td>
-                    @Html.DisplayFor(modelItem => item.Amount)
+                    @Ajax.ActionLink()
                 </td>
-                <td>
-                    @Html.ActionLink("Edit", "Edit", new { /* id=item.PrimaryKey */ }) |
-                    @Html.ActionLink("Details", "Details", new { /* id=item.PrimaryKey */ }) |
-                    @Html.ActionLink("Delete", "Delete", new { /* id=item.PrimaryKey */ })
-                </td>
-            </tr>
+            </tr>    
         }
 
     </table>
