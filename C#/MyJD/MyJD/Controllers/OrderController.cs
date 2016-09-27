@@ -6,7 +6,7 @@ using System.Web.Mvc;
 
 namespace MyJD.Controllers
 {
-    [Authorize] //必须登录会员才能使用订单结账功能
+    //[Authorize] //必须登录会员才能使用订单结账功能
     public class OrderController : Controller
     {
         //显示完成订单的窗体页面
