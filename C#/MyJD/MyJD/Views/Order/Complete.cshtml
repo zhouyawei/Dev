@@ -2,72 +2,53 @@
 
 <h2>结账</h2>
 
-@using (Html.BeginForm()) 
+@using (Html.BeginForm())
 {
-    @Html.AntiForgeryToken()
-    
-    <div class="form-horizontal">
-        <h4>OrderHeader</h4>
-        <hr />
-        @Html.ValidationSummary(true, "", new { @class = "text-danger" })
-        <div class="form-group">
-            @Html.LabelFor(model => model.ContactName, htmlAttributes: new { @class = "control-label col-md-2" })
-            <div class="col-md-10">
-                @Html.EditorFor(model => model.ContactName, new { htmlAttributes = new { @class = "form-control" } })
-                @Html.ValidationMessageFor(model => model.ContactName, "", new { @class = "text-danger" })
-            </div>
+    @Html.ValidationSummary(true)
+
+    <fieldset>
+        <legend>请输入配送信息与订单备注</legend>
+
+        <div class="editor-label">
+            @Html.LabelFor(model => model.ContactName)
+        </div>
+        <div class="editor-field">
+            @Html.EditorFor(model => model.ContactName)
+            @Html.ValidationMessageFor(model => model.ContactName)
         </div>
 
-        <div class="form-group">
-            @Html.LabelFor(model => model.ContactPhoneNO, htmlAttributes: new { @class = "control-label col-md-2" })
-            <div class="col-md-10">
-                @Html.EditorFor(model => model.ContactPhoneNO, new { htmlAttributes = new { @class = "form-control" } })
-                @Html.ValidationMessageFor(model => model.ContactPhoneNO, "", new { @class = "text-danger" })
-            </div>
+        <div class="editor-label">
+            @Html.LabelFor(model => model.ContactPhoneNO)
+        </div>
+        <div class="editor-field">
+            @Html.EditorFor(model => model.ContactPhoneNO)
+            @Html.ValidationMessageFor(model => model.ContactPhoneNO)
         </div>
 
-        <div class="form-group">
-            @Html.LabelFor(model => model.ContactAddress, htmlAttributes: new { @class = "control-label col-md-2" })
-            <div class="col-md-10">
-                @Html.EditorFor(model => model.ContactAddress, new { htmlAttributes = new { @class = "form-control" } })
-                @Html.ValidationMessageFor(model => model.ContactAddress, "", new { @class = "text-danger" })
-            </div>
+        <div class="editor-label">
+            @Html.LabelFor(model => model.ContactAddress)
+        </div>
+        <div class="editor-field">
+            @Html.EditorFor(model => model.ContactAddress)
+            @Html.ValidationMessageFor(model => model.ContactAddress)
         </div>
 
-        <div class="form-group">
-            @Html.LabelFor(model => model.TotalPrice, htmlAttributes: new { @class = "control-label col-md-2" })
-            <div class="col-md-10">
-                @Html.EditorFor(model => model.TotalPrice, new { htmlAttributes = new { @class = "form-control" } })
-                @Html.ValidationMessageFor(model => model.TotalPrice, "", new { @class = "text-danger" })
-            </div>
+        <div class="editor-label">
+            @Html.LabelFor(model => model.Memo)
+        </div>
+        <div class="editor-field">
+            @Html.EditorFor(model => model.Memo)
+            @Html.ValidationMessageFor(model => model.Memo)
         </div>
 
-        <div class="form-group">
-            @Html.LabelFor(model => model.Memo, htmlAttributes: new { @class = "control-label col-md-2" })
-            <div class="col-md-10">
-                @Html.EditorFor(model => model.Memo, new { htmlAttributes = new { @class = "form-control" } })
-                @Html.ValidationMessageFor(model => model.Memo, "", new { @class = "text-danger" })
-            </div>
-        </div>
-
-        <div class="form-group">
-            @Html.LabelFor(model => model.BuyOn, htmlAttributes: new { @class = "control-label col-md-2" })
-            <div class="col-md-10">
-                @Html.EditorFor(model => model.BuyOn, new { htmlAttributes = new { @class = "form-control" } })
-                @Html.ValidationMessageFor(model => model.BuyOn, "", new { @class = "text-danger" })
-            </div>
-        </div>
-
-        <div class="form-group">
-            <div class="col-md-offset-2 col-md-10">
-                <input type="submit" value="Create" class="btn btn-default" />
-            </div>
-        </div>
-    </div>
+        <p>
+            <input type="submit" value="完成订单">
+        </p>
+    </fieldset>
 }
 
 <div>
-    @Html.ActionLink("Back to List", "Index")
+    @Html.ActionLink("回首页", "Index", "Home")
 </div>
 
 @section Scripts {
