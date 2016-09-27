@@ -8,10 +8,8 @@ using System.Web.Mvc;
 
 namespace MyJD.Controllers
 {
-    public class HomeController : Controller
+    public class HomeController : BaseController
     {
-        MyJDDBContext db = new MyJDDBContext();
-
         //首页
         public ActionResult Index()
         {
@@ -146,5 +144,6 @@ namespace MyJD.Controllers
             var data = db.Products.Find(id);
             return View(data);
 #endif
+        }
     }
 }
