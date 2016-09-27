@@ -17,7 +17,7 @@ namespace MyJD.Models
 
         [DisplayName("订购会员")]
         [Required]
-        public Member Member { get; set; }
+        public virtual Member Member { get; set; }
 
         [DisplayName("收件人姓名")]
         [Required(ErrorMessage = "请输入收件人姓名，例如: +886-2-23222480#6342")]

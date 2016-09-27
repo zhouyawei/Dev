@@ -17,7 +17,7 @@ namespace MyJD.Models
 
         [DisplayName("商品类别")]
         [Required]
-        public ProductCategory ProductCategory { get; set; }
+        public virtual ProductCategory ProductCategory { get; set; }
 
         [DisplayName("商品名称")]
         [Required(ErrorMessage = "请输入商品名称")]

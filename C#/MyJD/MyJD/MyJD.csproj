@@ -126,6 +126,7 @@
     <Compile Include="App_Start\BundleConfig.cs" />
     <Compile Include="App_Start\FilterConfig.cs" />
     <Compile Include="App_Start\RouteConfig.cs" />
+    <Compile Include="Controllers\BaseController.cs" />
     <Compile Include="Controllers\CartController.cs" />
     <Compile Include="Controllers\HomeController.cs" />
     <Compile Include="Controllers\MemberController.cs" />
@@ -136,6 +137,7 @@
     <Compile Include="Models\Cart.cs" />
     <Compile Include="Models\Member.cs" />
     <Compile Include="Models\MemberLoginViewModel.cs" />
+    <Compile Include="Models\MyJDDBContext.cs" />
     <Compile Include="Models\OrderDetail.cs" />
     <Compile Include="Models\OrderHeader.cs" />
     <Compile Include="Models\Product.cs" />
@@ -189,6 +191,7 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
+    <Folder Include="Views\Base\" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="fonts\glyphicons-halflings-regular.woff" />

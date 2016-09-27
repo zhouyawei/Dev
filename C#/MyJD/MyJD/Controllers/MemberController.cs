@@ -23,7 +23,7 @@ namespace MyJD.Controllers
             [Bind(Exclude="RegisterOn,AuthCode")]
             Member member)
         {
-            
+            var chk_member = 
             return View();
         }
 

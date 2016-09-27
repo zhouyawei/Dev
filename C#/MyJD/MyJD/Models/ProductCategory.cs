@@ -18,5 +18,7 @@ namespace MyJD.Models
         [Required(ErrorMessage = "请输入商品类别名称")]
         [MaxLength(20, ErrorMessage = "类别名称不可超过20个字")]
         public string Name { get; set; }
+
+        public virtual ICollection<Product> Products { get; set; }
     }
 }
