@@ -2,6 +2,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
+using System.Net.Mail;
 using System.Web;
 using System.Web.Mvc;
 using System.Web.Security;
@@ -40,9 +42,13 @@ namespace MyJD.Controllers
                 member.RegisterOn = DateTime.Now;
                 //会员验证码
                 member.AuthCode = Guid.NewGuid().ToString();
-
+                
+                //保存到数据库
                 db.Members.Add(member);
                 db.SaveChanges();
+
+                //发送验证
+                SendAuthCodeToMember(member);
 
                 return RedirectToAction("Index", "Home");
             }
@@ -50,6 +56,57 @@ namespace MyJD.Controllers
             {
                 return View();
             }
+        }
+
+        private void SendAuthCodeToMember(Member member)
+        {
+            string mailBody = System.IO.File.ReadAllText(Server.MapPath("~/App_Data/MemberRegisterEmailTemplate.htm"));
+            mailBody = mailBody.Replace("{{Name}}", member.Name);
+            mailBody = mailBody.Replace("{{RegisterOn}}", member.RegisterOn.ToString("F"));
+            var auth_url = new UriBuilder(Request.Url)
+            {
+                Path = Url.Action("ValidateRegister", new { id = member.AuthCode}),
+                Query = ""
+            };
+            mailBody = mailBody.Replace("{{AUTH_URL}}", auth_url.ToString());
+
+            try
+            {
+                SmtpClient smtpClient = new SmtpClient("smtp.qq.com");
+                smtpClient.Port = 465;
+                smtpClient.Credentials = new NetworkCredential("1072817424@qq.com", "tigieejcvedwbbbh");
+                smtpClient.EnableSsl = true;
+
+                MailMessage mailMessage = new MailMessage();
+                mailMessage.From = new MailAddress("1072817424@qq.com");
+                mailMessage.To.Add(member.Email);
+                mailMessage.Subject = "MyJD商城会员注册确认信";
+                mailMessage.Body = mailBody;
+                mailMessage.IsBodyHtml = true;
+
+                smtpClient.Send(mailMessage);
+            }
+            catch(Exception)
+            { }
+        }
+
+        public ActionResult ValidateRegister(string id)
+        {
+            if (string.IsNullOrEmpty(id))
+                return HttpNotFound();
+
+            var member = db.Members.Where(p => p.AuthCode == id).FirstOrDefault();
+            if (member != null)
+            {
+                TempData["LastTempMessage"] = "会员验证成功，您可以现在登录了！";
+                member.AuthCode = null;
+                db.SaveChanges();
+            }
+            else
+            {
+                TempData["LastTempMessage"] = "没有找到此会员验证码，您可能已经验证过了!"; 
+            }
+            return RedirectToAction("Login", "Member");
         }
 
         //显示会员登录页面
@@ -100,8 +157,23 @@ namespace MyJD.Controllers
                 "SHA1");
 
             var member = db.Members.Where(p => p.Email == email && p.Password == hash_pw).FirstOrDefault();
-
-            return member != null;
+            if (member != null)
+            {
+                if (member.AuthCode == null)
+                {
+                    return true;
+                }
+                else
+                {
+                    ModelState.AddModelError("", "您的账号尚未激活");
+                    return false;
+                }
+            }
+            else
+            {
+                ModelState.AddModelError("", "您输入的账号或密码错误");
+                return false;
+            }
         }
     }
 }

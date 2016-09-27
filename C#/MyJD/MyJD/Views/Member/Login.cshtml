@@ -44,4 +44,11 @@
 
 @section Scripts {
     @Scripts.Render("~/bundles/jqueryval")
+
+    @if (TempData["LastTempMessage"] != null)
+    {
+        <script>
+            alert('@HttpUtility.JavaScriptStringEncode(Convert.ToString(TempData["LastTempMessage"]))');
+        </script>
+    }
 }
