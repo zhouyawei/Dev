@@ -24,7 +24,7 @@ namespace MyJD.Controllers
         //写入会员信息
         [HttpPost]
         public ActionResult Register(
-            [Bind(Exclude = "RegisterOn,AuthCode")]
+            //[Bind(Exclude = "RegisterOn,AuthCode")]
             Member member)
         {
             var chk_member = db.Members.Where(p => p.Email == member.Email).FirstOrDefault();
@@ -73,7 +73,7 @@ namespace MyJD.Controllers
             try
             {
                 SmtpClient smtpClient = new SmtpClient("smtp.qq.com");
-                smtpClient.Port = 465;
+                smtpClient.Port = 587;
                 smtpClient.Credentials = new NetworkCredential("1072817424@qq.com", "tigieejcvedwbbbh");
                 smtpClient.EnableSsl = true;
 
