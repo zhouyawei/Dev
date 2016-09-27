@@ -50,7 +50,7 @@
             subTotal += Model[i].Product.Price;
 
             //选择商品数量的菜单只能选择1~10
-            var ddlAmountList = new SelectList(Enumerable.Range(1, 10), Model[i].Amount)
+            var ddlAmountList = new SelectList(Enumerable.Range(1, 10), Model[i].Amount);
             
             @Html.HiddenFor(modelItem => Model[i].Product.Id)
                 
@@ -60,10 +60,21 @@
                 <td>@Html.DropDownListFor(modelItem => Model[i], ddlAmountList)</td>
                 <td>NT$ @(Model[i].Product.Price * Model[i].Amount)</td>
                 <td>
-                    @Ajax.ActionLink()
+                    @Ajax.ActionLink("删除", "Remove", new {ProductId = Model[i].Product.Id}, ajaxOptions)
                 </td>
             </tr>    
         }
 
+        <tr>
+            <th></th>
+            <th></th>
+            <th>总价</th>
+            <th id="subTotal"NT$ @subTotal></th>
+            <th></th>
+        </tr>
     </table>
+    <p>
+        <input type="submit" value="更新数量"/>
+        <input type="button" value="完成订单" onclick="location.href = '@Url.Action("Complete", "Order");'"/>
+    </p>
 }
