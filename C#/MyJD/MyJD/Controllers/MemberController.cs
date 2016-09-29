@@ -51,10 +51,9 @@ namespace MyJD.Controllers
                 //发送验证
                 //SendAuthCodeToMember(member);
 
-                var routePara = new RouteValueDictionary();
-                routePara.Add("userName", member.Email);
-                return RedirectToAction("RegisterSuccess", routePara);
-
+                return RedirectToAction("RegisterSuccess", new { userName = member.Email });
+                //ViewBag.userName = member.Email;
+                
                 //return RedirectToAction("Index", "Home");
             }
             else
@@ -65,7 +64,8 @@ namespace MyJD.Controllers
 
         public ActionResult RegisterSuccess(string userName)
         {
-            return View(userName); 
+            ViewBag.userName = userName;
+            return View(); 
         }
 
         private void SendAuthCodeToMember(Member member)
