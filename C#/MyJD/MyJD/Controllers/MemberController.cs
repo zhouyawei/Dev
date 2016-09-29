@@ -122,19 +122,18 @@ namespace MyJD.Controllers
         {
             if (ValidateUser(email, password))
             {
-                FormsAuthentication.SetAuthCookie(email, false);
+                FormsAuthentication.SetAuthCookie(email, true);
 
                 if (string.IsNullOrEmpty(returnUrl))
                 {
                     return RedirectToAction("Index", "Home");
                 }
+                else
+                {
+                    return Redirect(returnUrl);
+                }
             }
-            else
-            {
-                return Redirect(returnUrl);
-            }
-
-            ModelState.AddModelError("", "您输入的账号或者密码错误");
+            
             return View();
         }
 

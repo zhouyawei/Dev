@@ -9,7 +9,7 @@ namespace MyJD.Models
     public class MyJDDBContext : DbContext
     {
         public MyJDDBContext()
-            : base("name=DefaultConnection")
+            : base("DefaultConnection")
         {
 
         }
