@@ -190,6 +190,7 @@
     <Content Include="Views\Member\Login.cshtml" />
     <Content Include="Views\Cart\Index.cshtml" />
     <Content Include="Views\Order\Complete.cshtml" />
+    <Content Include="Views\Member\RegisterSuccess.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Views\Base\" />

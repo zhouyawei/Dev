@@ -6,6 +6,7 @@ using System.Net;
 using System.Net.Mail;
 using System.Web;
 using System.Web.Mvc;
+using System.Web.Routing;
 using System.Web.Security;
 
 namespace MyJD.Controllers
@@ -48,14 +49,23 @@ namespace MyJD.Controllers
                 db.SaveChanges();
 
                 //发送验证
-                SendAuthCodeToMember(member);
+                //SendAuthCodeToMember(member);
 
-                return RedirectToAction("Index", "Home");
+                var routePara = new RouteValueDictionary();
+                routePara.Add("userName", member.Email);
+                return RedirectToAction("RegisterSuccess", routePara);
+
+                //return RedirectToAction("Index", "Home");
             }
             else
             {
                 return View();
             }
+        }
+
+        public ActionResult RegisterSuccess(string userName)
+        {
+            return View(userName); 
         }
 
         private void SendAuthCodeToMember(Member member)
@@ -147,6 +157,17 @@ namespace MyJD.Controllers
             Session.Clear();
 
             return RedirectToAction("Index", "Home");
+        }
+
+        [HttpPost]
+        public ActionResult CheckDup(string email)
+        {
+            var member = db.Members.Where(p => p.Email == email).FirstOrDefault();
+
+            if (member != null)
+                return Json(false);
+            else
+                return Json(true);
         }
 
         private bool ValidateUser(string email, string password)
