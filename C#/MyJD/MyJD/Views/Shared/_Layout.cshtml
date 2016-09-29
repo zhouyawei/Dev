@@ -4,7 +4,15 @@
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>@ViewBag.Title - 京东(JD.COM)-综合网购首选-正品低价、品质保障、配送及时、轻松购物！</title>
+    <title>@if (!string.IsNullOrEmpty(ViewBag.Title))
+           {
+               <text>@ViewBag.Title - 京东(JD.COM)-综合网购首选-正品低价、品质保障、配送及时、轻松购物！></text>
+           }
+           else
+           {
+               <text>欢迎光临京东商城(JD.COM)，综合网购首选-正品低价、品质保障、配送及时、轻松购物！</text>
+           }
+    </title>
     @Styles.Render("~/Content/css")
     @Scripts.Render("~/bundles/modernizr")
 
@@ -13,10 +21,11 @@
     <header>
         <nav>
             @Html.ActionLink("首页", "Index", "Home")
-            | @Html.ActionLink("购物车", "Index", "Cart")
+            | @Html.ActionLink("我的购物车", "Index", "Cart")
             @if (User.Identity.IsAuthenticated)
             {
-                @:| @Html.ActionLink("注销", "Logout", "Memeber") 
+                <text>| 欢迎您，@User.Identity.Name</text>
+                @:| @Html.ActionLink("注销", "Logout", "Member") 
             }
             else
             {

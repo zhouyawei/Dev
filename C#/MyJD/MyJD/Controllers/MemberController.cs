@@ -24,7 +24,7 @@ namespace MyJD.Controllers
         //写入会员信息
         [HttpPost]
         public ActionResult Register(
-            //[Bind(Exclude = "RegisterOn,AuthCode")]
+            [Bind(Exclude = "RegisterOn,AuthCode")]
             Member member)
         {
             var chk_member = db.Members.Where(p => p.Email == member.Email).FirstOrDefault();
