@@ -5,19 +5,6 @@
 
 <link href="~/Content/PagedList.css" rel="stylesheet"/>
 
-@{
-    var ajaxOptions = new AjaxOptions()
-    {
-        OnSuccess = "AddToCartSuccess",
-        OnFailure = "AddToCartFailure",
-        HttpMethod = "Post"
-    };
-}
-
-@{
-    var data = Model as IPagedList<MyJD.Models.Product>;
-}
-
 @section scripts{
     @Scripts.Render("~/bundles/jqueryval")
 
@@ -29,9 +16,16 @@
         function AddToCartFailure(xhr) {
             alert("添加购物车失败 (HTTP状态码: " + xhr.status + ")");
         }
-
     </script>
+}
 
+@{
+    var ajaxOptions = new AjaxOptions()
+    {
+        OnSuccess = "AddToCartSuccess",
+        OnFailure = "AddToCartFailure",
+        HttpMethod = "Post"
+    };
 }
 
 <h2>@Html.DisplayNameFor(model => model.ToList()[0])</h2>
@@ -43,7 +37,7 @@
         <th>@Html.DisplayNameFor(model => model.Name)</th>
         <th>@Html.DisplayNameFor(model => model.Description)</th>
         <th>@Html.DisplayNameFor(model => model.Price)</th>
-        <th>添加购物车</th>
+        <th>添加到购物车</th>
     </tr>
     @foreach(var item in Model)
     {
@@ -51,9 +45,13 @@
             <td>@Html.ActionLink(item.Name, "ProductDetail", new { id = item.Id })</td>
             <td>@Html.DisplayFor(modelItem => item.Description)</td>
             <td>@Html.DisplayFor(modelItem => item.Price)</td>
-            <td>@Ajax.ActionLink("添加购物车", "AddToCart", "Cart", new { ProductId = item.Id }, ajaxOptions)</td>
+            <td>@Ajax.ActionLink("添加", "AddToCart", "Cart", new { productId = item.Id }, ajaxOptions)</td>
         </tr>
     }
 </table>
+
+@{
+    var data = Model as IPagedList<MyJD.Models.Product>;
+}
 
 @Html.PagedListPager(list: data, generatePageUrl: Page => Url.Action("ProductList", new { p = Page }))

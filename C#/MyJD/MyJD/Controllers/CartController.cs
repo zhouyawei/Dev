@@ -22,19 +22,19 @@ namespace MyJD.Controllers
         {
             var product = db.Products.Find(productId);
             //验证产品是否存在
-            if(product == null)
+            if (product == null)
             {
                 return HttpNotFound();
             }
 
-            var existingCart = this.Carts.FirstOrDefault(p=>p.Product.Id == productId);
+            var existingCart = this.Carts.FirstOrDefault(p => p.Product.Id == productId);
             if (existingCart != null)
             {
                 existingCart.Amount++;
             }
             else
             {
-                this.Carts.Add(new Cart() { Product = product, Amount = amount});
+                this.Carts.Add(new Cart() { Product = product, Amount = amount });
             }
 
             return new HttpStatusCodeResult(HttpStatusCode.Created);
@@ -44,7 +44,7 @@ namespace MyJD.Controllers
         [HttpPost]
         public ActionResult Remove(int productId)
         {
-            var existingCart = this.Carts.FirstOrDefault(p=>p.Product.Id == productId);
+            var existingCart = this.Carts.FirstOrDefault(p => p.Product.Id == productId);
             if (existingCart != null)
             {
                 this.Carts.Remove(existingCart);
@@ -57,7 +57,7 @@ namespace MyJD.Controllers
         [HttpPost]
         public ActionResult UpdateAmount(int productId, int newAmount)
         {
-            var existingCart = this.Carts.FirstOrDefault(p=>p.Product.Id == productId);
+            var existingCart = this.Carts.FirstOrDefault(p => p.Product.Id == productId);
             if (existingCart != null)
             {
                 existingCart.Amount = newAmount;
