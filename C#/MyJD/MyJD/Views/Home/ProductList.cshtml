@@ -1,4 +1,9 @@
-﻿@model IEnumerable<MyJD.Models.Product>
+﻿@using PagedList;
+@using PagedList.Mvc;
+
+@model IEnumerable<MyJD.Models.Product>
+
+<link href="~/Content/PagedList.css" rel="stylesheet"/>
 
 @{
     var ajaxOptions = new AjaxOptions()
@@ -7,6 +12,10 @@
         OnFailure = "AddToCartFailure",
         HttpMethod = "Post"
     };
+}
+
+@{
+    var data = Model as IPagedList<MyJD.Models.Product>;
 }
 
 @section scripts{
@@ -46,3 +55,5 @@
         </tr>
     }
 </table>
+
+@Html.PagedListPager(list: data, generatePageUrl: Page => Url.Action("ProductList", new { p = Page }))

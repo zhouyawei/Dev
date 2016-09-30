@@ -1,27 +1,30 @@
-﻿@section Scripts {
-    <script>
-        var i = 5;
+﻿@{
+    ViewBag.Title = "注册成功!";
+}
+
+<h5>亲爱的 @ViewBag.userName，恭喜您已成功注册！为了激活您的账户，我们已经发送了一封带有激活链接的邮件到您的注册邮箱，点击激活后既可使用您的账户。</h5>
+<br>
+本页将在<span id="time" style="color:red">9</span>秒后自动跳转至 @Html.ActionLink("首页", "Index", "Home")
+
+@section scripts {
+    <script type="text/javascript">
+        var i = document.getElementById("time").innerText;
 
         // 获取登录事件，并处理自动跳转
-        window.onload = function JumpPage() {
-            document.getElementById("time").innerText = i;
-
-            // 计时为0后，立即跳转
+        function JumpPage() {
             i--;
-            if (i < 0) {
-                location.replace(@Html.Action("Index", "Home"));
+            if (i >= 0) {
+                
+                document.getElementById("time").innerText = i;
             }
 
-            setTimeout("JumpPage()", 1000);
+            // 计时为0后，立即跳转
+            if (i == 0) {
+                location.replace('@Url.Action("Index", "Home")');
+            }
         }
+
+        setInterval("JumpPage()", 1000);
+
     </script>
 }
-
-@{
-    ViewBag.Title = "RegisterSuccess";
-}
-
-<h2>亲爱的 @ViewBag.userName，恭喜！为了激活您的账户，我们已经发送了一封带有激活链接的邮件到您的注册邮箱，点击既可激活使用您的账户啦~</h2>
-<br>
-本页将在<span id="time" style="color: #FF0000"></span>秒后自动跳转至 @Html.ActionLink("首页", "Index", "Home")
-

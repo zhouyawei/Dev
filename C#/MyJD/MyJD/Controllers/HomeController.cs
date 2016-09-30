@@ -5,6 +5,7 @@ using System.Drawing;
 using System.Linq;
 using System.Web;
 using System.Web.Mvc;
+using PagedList;
 
 namespace MyJD.Controllers
 {
@@ -43,7 +44,7 @@ namespace MyJD.Controllers
         }
 
         //商品列表
-        public ActionResult ProductList(int id)
+        public ActionResult ProductList(int id, int p = 1)
         {
 #if DEBUG_FALSE
             var productCategoty = new ProductCategory() 
@@ -105,10 +106,13 @@ namespace MyJD.Controllers
                         Color = Color.Black
                     });
                     db.SaveChanges();
-                    data = productCategory.Products.ToList();
                 }
 
-                return View(data);
+                //data = productCategory.Products.ToList();
+                /*分页*/
+                var pagedData = data.ToPagedList(pageNumber: p, pageSize: 1);
+
+                return View(pagedData /*data*/ );
             }
             else
             {

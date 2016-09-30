@@ -8,7 +8,7 @@ using System.Web;
 
 namespace MyJD.Models
 {
-    [DisplayName("商品資訊")]
+    [DisplayName("商品大全")]
     [DisplayColumn("Name")]
     public class Product
     {
@@ -24,22 +24,22 @@ namespace MyJD.Models
         [MaxLength(60, ErrorMessage = "商品名称不可超过60个字")]
         public string Name { get; set; }
 
-        [DisplayName("商品簡介")]
-        [Required(ErrorMessage = "請輸入商品簡介")]
-        [MaxLength(250, ErrorMessage = "商品簡介請勿輸入超過250個字")]
+        [DisplayName("商品简介")]
+        [Required(ErrorMessage = "请输入商品简介")]
+        [MaxLength(250, ErrorMessage = "商品简介请勿输入超过250个字符")]
         public string Description { get; set; }
 
-        [DisplayName("商品顏色")]
-        [Required(ErrorMessage = "請選擇商品顏色")]
+        [DisplayName("商品颜色")]
+        [Required(ErrorMessage = "请选择商品颜色")]
         public Color Color { get; set; }
 
-        [DisplayName("商品售價")]
-        [Required(ErrorMessage = "請輸入商品售價")]
-        [Range(0, 9999999999999999999999999999999999999999999999999999999999999d, ErrorMessage = "商品售價必須介於 0 ~ 9999999999999999999999999999999999999999999999999999999999999 之間")]
+        [DisplayName("商品售价")]
+        [Required(ErrorMessage = "请输入商品售价")]
+        [Range(0, 9999999999999999999999999999999999999999999999999999999999999d, ErrorMessage = "商品售价须介于0 ~ 9999999999999999999999999999999999999999999999999999999999999之间")]
         public decimal Price { get; set; }
 
-        [DisplayName("上架時間")]
-        [Description("如果不設定上架時間，代表此商品永不上架")]
+        [DisplayName("上架时间")]
+        [Description("如果不设置上架时间，代表此商品为下架状态")]
         public DateTime? PublishOn { get; set; }
     }
 }
