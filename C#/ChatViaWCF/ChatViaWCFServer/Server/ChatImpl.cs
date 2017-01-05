@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.ServiceModel;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using log4net;
 
@@ -35,7 +36,7 @@ namespace ChatViaWCFServer.Server
                     _onlineUserHashtable[userId] = callbackChannel;
                     _log.Info(string.Format("用户{0}再次登录成功!", userId));
                 }
-                
+
                 var communicationObject = callbackChannel as ICommunicationObject;
                 communicationObject.Closed += communicationObject_Closed;
 
@@ -52,6 +53,8 @@ namespace ChatViaWCFServer.Server
                     _onlineUserChannelHashtable[callbackChannel] = userId;
                     _log.Info(string.Format("用户{0}的通道再次建立成功!", userId));
                 }
+
+                ThreadPool.QueueUserWorkItem(RefreshAllClients);
             }
             catch (Exception e)
             {
@@ -59,7 +62,22 @@ namespace ChatViaWCFServer.Server
             }
         }
 
-        void communicationObject_Closed(object sender, EventArgs e)
+        private void RefreshAllClients(object state)
+        {
+            foreach (IChatCallback channel in _onlineUserChannelHashtable.Keys)
+            {
+                try
+                {
+                    channel.Refresh();
+                }
+                catch (Exception e)
+                {
+                    _log.ErrorFormat("ChatImpl->RefreshAllClients出现异常{0}", e);
+                }
+            }
+        }
+
+        private void communicationObject_Closed(object sender, EventArgs e)
         {
             var callbackChannel = sender;
             if (_onlineUserChannelHashtable.ContainsKey(callbackChannel))
@@ -124,6 +142,30 @@ namespace ChatViaWCFServer.Server
                 _log.ErrorFormat("ChatImpl->GetOnlineUserList出现异常{0}", e);
             }
             
+            return onlineUsers;
+        }
+
+        public IList<string> GetOnlineUserListBesidesMe()
+        {
+            var fromChannel = OperationContext.Current.GetCallbackChannel<IChatCallback>();
+            IList<string> onlineUsers = new List<string>();
+            try
+            {
+                foreach (DictionaryEntry dictionaryEntry in _onlineUserHashtable)
+                {
+                    var userId = dictionaryEntry.Key as string;
+                    var otherChannel = dictionaryEntry.Value;
+                    if (fromChannel != otherChannel)
+                    {
+                        onlineUsers.Add(userId);
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                _log.ErrorFormat("ChatImpl->GetOnlineUserList出现异常{0}", e);
+            }
+
             return onlineUsers;
         }
 

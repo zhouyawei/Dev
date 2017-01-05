@@ -43,7 +43,7 @@ namespace ChatViaWCFClient
         private void RefreshOnlineUsers()
         {
             ChatClient chatClient = GetChatClient();
-            _friendListBox.ItemsSource = chatClient.GetOnlineUserList();
+            _friendListBox.ItemsSource = chatClient.GetOnlineUserListBesidesMe();
         }
 
         public ChatClient GetChatClient()

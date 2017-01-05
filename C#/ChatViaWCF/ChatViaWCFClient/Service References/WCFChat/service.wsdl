@@ -72,8 +72,23 @@
         <soap12:body use="literal" />
       </wsdl:output>
     </wsdl:operation>
+    <wsdl:operation name="GetOnlineUserListBesidesMe">
+      <soap12:operation soapAction="http://eastmoney.com/IChat/GetOnlineUserListBesidesMe" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
     <wsdl:operation name="ReceiveMessage">
       <soap12:operation soapAction="http://eastmoney.com/IChat/ReceiveMessage" style="document" />
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="Refresh">
+      <soap12:operation soapAction="http://eastmoney.com/IChat/Refresh" style="document" />
       <wsdl:output>
         <soap12:body use="literal" />
       </wsdl:output>

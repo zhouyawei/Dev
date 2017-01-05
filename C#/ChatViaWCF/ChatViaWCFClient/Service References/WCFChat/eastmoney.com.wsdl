@@ -28,8 +28,17 @@
   <wsdl:message name="IChat_GetOnlineUserList_OutputMessage">
     <wsdl:part name="parameters" element="tns:GetOnlineUserListResponse" />
   </wsdl:message>
+  <wsdl:message name="IChat_GetOnlineUserListBesidesMe_InputMessage">
+    <wsdl:part name="parameters" element="tns:GetOnlineUserListBesidesMe" />
+  </wsdl:message>
+  <wsdl:message name="IChat_GetOnlineUserListBesidesMe_OutputMessage">
+    <wsdl:part name="parameters" element="tns:GetOnlineUserListBesidesMeResponse" />
+  </wsdl:message>
   <wsdl:message name="IChat_ReceiveMessage_OutputCallbackMessage">
     <wsdl:part name="parameters" element="tns:ReceiveMessage" />
+  </wsdl:message>
+  <wsdl:message name="IChat_Refresh_OutputCallbackMessage">
+    <wsdl:part name="parameters" element="tns:Refresh" />
   </wsdl:message>
   <wsdl:portType name="IChat">
     <wsdl:operation name="Login">
@@ -47,8 +56,15 @@
       <wsdl:input wsaw:Action="http://eastmoney.com/IChat/GetOnlineUserList" message="tns:IChat_GetOnlineUserList_InputMessage" />
       <wsdl:output wsaw:Action="http://eastmoney.com/IChat/GetOnlineUserListResponse" message="tns:IChat_GetOnlineUserList_OutputMessage" />
     </wsdl:operation>
+    <wsdl:operation name="GetOnlineUserListBesidesMe">
+      <wsdl:input wsaw:Action="http://eastmoney.com/IChat/GetOnlineUserListBesidesMe" message="tns:IChat_GetOnlineUserListBesidesMe_InputMessage" />
+      <wsdl:output wsaw:Action="http://eastmoney.com/IChat/GetOnlineUserListBesidesMeResponse" message="tns:IChat_GetOnlineUserListBesidesMe_OutputMessage" />
+    </wsdl:operation>
     <wsdl:operation name="ReceiveMessage">
       <wsdl:output wsaw:Action="http://eastmoney.com/IChat/ReceiveMessage" message="tns:IChat_ReceiveMessage_OutputCallbackMessage" />
+    </wsdl:operation>
+    <wsdl:operation name="Refresh">
+      <wsdl:output wsaw:Action="http://eastmoney.com/IChat/Refresh" message="tns:IChat_Refresh_OutputCallbackMessage" />
     </wsdl:operation>
   </wsdl:portType>
 </wsdl:definitions>

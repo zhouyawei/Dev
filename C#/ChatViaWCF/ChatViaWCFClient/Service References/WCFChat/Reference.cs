@@ -38,6 +38,12 @@ namespace ChatViaWCFClient.WCFChat {
         
         [System.ServiceModel.OperationContractAttribute(Action="http://eastmoney.com/IChat/GetOnlineUserList", ReplyAction="http://eastmoney.com/IChat/GetOnlineUserListResponse")]
         System.Threading.Tasks.Task<string[]> GetOnlineUserListAsync();
+        
+        [System.ServiceModel.OperationContractAttribute(Action="http://eastmoney.com/IChat/GetOnlineUserListBesidesMe", ReplyAction="http://eastmoney.com/IChat/GetOnlineUserListBesidesMeResponse")]
+        string[] GetOnlineUserListBesidesMe();
+        
+        [System.ServiceModel.OperationContractAttribute(Action="http://eastmoney.com/IChat/GetOnlineUserListBesidesMe", ReplyAction="http://eastmoney.com/IChat/GetOnlineUserListBesidesMeResponse")]
+        System.Threading.Tasks.Task<string[]> GetOnlineUserListBesidesMeAsync();
     }
     
     [System.CodeDom.Compiler.GeneratedCodeAttribute("System.ServiceModel", "4.0.0.0")]
@@ -45,6 +51,9 @@ namespace ChatViaWCFClient.WCFChat {
         
         [System.ServiceModel.OperationContractAttribute(IsOneWay=true, Action="http://eastmoney.com/IChat/ReceiveMessage")]
         void ReceiveMessage(string userId, string messageContent);
+        
+        [System.ServiceModel.OperationContractAttribute(IsOneWay=true, Action="http://eastmoney.com/IChat/Refresh")]
+        void Refresh();
     }
     
     [System.CodeDom.Compiler.GeneratedCodeAttribute("System.ServiceModel", "4.0.0.0")]
@@ -105,6 +114,14 @@ namespace ChatViaWCFClient.WCFChat {
         
         public System.Threading.Tasks.Task<string[]> GetOnlineUserListAsync() {
             return base.Channel.GetOnlineUserListAsync();
+        }
+        
+        public string[] GetOnlineUserListBesidesMe() {
+            return base.Channel.GetOnlineUserListBesidesMe();
+        }
+        
+        public System.Threading.Tasks.Task<string[]> GetOnlineUserListBesidesMeAsync() {
+            return base.Channel.GetOnlineUserListBesidesMeAsync();
         }
     }
 }

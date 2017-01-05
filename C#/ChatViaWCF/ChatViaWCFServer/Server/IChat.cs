@@ -22,5 +22,8 @@ namespace ChatViaWCFServer.Server
 
         [OperationContract]
         IList<string> GetOnlineUserList();
+
+        [OperationContract]
+        IList<string> GetOnlineUserListBesidesMe();
     }
 }

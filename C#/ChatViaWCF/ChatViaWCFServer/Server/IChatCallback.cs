@@ -11,5 +11,8 @@ namespace ChatViaWCFServer.Server
     {
         [OperationContract(IsOneWay = true)]
         void ReceiveMessage(string userId, string messageContent);
+
+        [OperationContract(IsOneWay = true)]
+        void Refresh();
     }
 }
