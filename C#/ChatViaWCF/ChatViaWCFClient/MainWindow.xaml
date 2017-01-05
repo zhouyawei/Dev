@@ -1,0 +1,49 @@
+﻿<Window x:Class="ChatViaWCFClient.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="MyQQ" Height="350" Width="525">
+    <Grid Name="_mainGrid">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"></RowDefinition>
+            <RowDefinition Height="*"></RowDefinition>
+            <RowDefinition Height="Auto"></RowDefinition>
+        </Grid.RowDefinitions>
+        <Menu Grid.Row="0">
+            <MenuItem Header="系统">
+                <MenuItem Header="登录" Name="_loginMenuItem" Click="_loginMenuItem_OnClick"></MenuItem>
+                <MenuItem Header="注销" Name="_logoutMenuItem" Click="_logoutMenuItem_OnClick"></MenuItem>
+            </MenuItem>
+        </Menu>
+        <Grid Name="_contentGrid" Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"></ColumnDefinition>
+                <ColumnDefinition Width="*"></ColumnDefinition>
+            </Grid.ColumnDefinitions>
+            <Grid Name="_leftGrid" Grid.Column="0">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"></RowDefinition>
+                    <RowDefinition Height="*"></RowDefinition>
+                </Grid.RowDefinitions>
+                <TextBlock Name="_userIdTextBlock" Grid.Row="0" MinWidth="75" MinHeight="75" Margin="5"></TextBlock>
+                <GroupBox Header="我的好友" Grid.Row="1">
+                    <ListBox Name="_friendListBox"></ListBox>
+                </GroupBox>
+            </Grid>
+            <Grid Name="_rightGrid" Grid.Column="1">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*"></RowDefinition>
+                    <RowDefinition Height="Auto"></RowDefinition>
+                </Grid.RowDefinitions>
+                <TextBox Name="_msgTextBox" Grid.Row="0" MinHeight="200" IsReadOnly="True" TextWrapping="WrapWithOverflow"></TextBox>
+                <Grid Name="_sendMsgGrid" Grid.Row="1">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"></ColumnDefinition>
+                        <ColumnDefinition Width="Auto"></ColumnDefinition>
+                    </Grid.ColumnDefinitions>
+                    <TextBox Name="_sendMsgTextBox" Grid.Column="0" MinWidth="320"></TextBox>
+                    <Button Name="_sendMsgButton" Grid.Column="1" Click="_sendMsgButton_OnClick">发送</Button>
+                </Grid>
+            </Grid>
+        </Grid>
+    </Grid>
+</Window>

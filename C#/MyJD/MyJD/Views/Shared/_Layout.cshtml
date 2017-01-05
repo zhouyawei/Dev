@@ -19,17 +19,17 @@
 </head>
 <body>
     <header>
-        <nav>
+        <nav class="navbar navbar-default " role="navigation">
             @Html.ActionLink("首页", "Index", "Home")
             | @Html.ActionLink("我的购物车", "Index", "Cart")
             @if (User.Identity.IsAuthenticated)
             {
                 <text>| 欢迎您，@User.Identity.Name</text>
-                @:| @Html.ActionLink("注销", "Logout", "Member") 
+                @:| @Html.ActionLink("注销", "Logout", "Member")
             }
             else
             {
-                @:| @Html.ActionLink("登录", "Login", "Member") 
+                @:| @Html.ActionLink("登录", "Login", "Member")
                 @:| @Html.ActionLink("注册", "Register", "Member")
             }
         </nav>

@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ReferenceGroup xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" ID="f8e47a9b-5c69-4aa3-8412-7417ecf8c0a3" xmlns="urn:schemas-microsoft-com:xml-wcfservicemap">
+  <ClientOptions>
+    <GenerateAsynchronousMethods>false</GenerateAsynchronousMethods>
+    <GenerateTaskBasedAsynchronousMethod>true</GenerateTaskBasedAsynchronousMethod>
+    <EnableDataBinding>true</EnableDataBinding>
+    <ExcludedTypes />
+    <ImportXmlTypes>false</ImportXmlTypes>
+    <GenerateInternalTypes>false</GenerateInternalTypes>
+    <GenerateMessageContracts>false</GenerateMessageContracts>
+    <NamespaceMappings />
+    <CollectionMappings />
+    <GenerateSerializableTypes>true</GenerateSerializableTypes>
+    <Serializer>Auto</Serializer>
+    <UseSerializerForFaults>true</UseSerializerForFaults>
+    <ReferenceAllAssemblies>true</ReferenceAllAssemblies>
+    <ReferencedAssemblies />
+    <ReferencedDataContractTypes />
+    <ServiceContractMappings />
+  </ClientOptions>
+  <MetadataSources>
+    <MetadataSource Address="net.tcp://127.0.0.1:18888/ChatService/mex" Protocol="mex" SourceId="1" />
+  </MetadataSources>
+  <Metadata>
+    <MetadataFile FileName="eastmoney.com.wsdl" MetadataType="Wsdl" ID="766d5e19-5265-43c8-b4bb-516b97352c29" SourceId="1" SourceUrl="net.tcp://127.0.0.1:18888/ChatService/mex" />
+    <MetadataFile FileName="service.wsdl" MetadataType="Wsdl" ID="9552c584-d440-42ba-b242-7453b2ea485f" SourceId="1" SourceUrl="net.tcp://127.0.0.1:18888/ChatService/mex" />
+    <MetadataFile FileName="eastmoney.com.xsd" MetadataType="Schema" ID="ba8b76f9-2434-411c-9d71-cd8fe444f224" SourceId="1" SourceUrl="net.tcp://127.0.0.1:18888/ChatService/mex" />
+    <MetadataFile FileName="service1.xsd" MetadataType="Schema" ID="eff7366c-01b6-47ea-81e9-d4274d17bac1" SourceId="1" SourceUrl="net.tcp://127.0.0.1:18888/ChatService/mex" />
+    <MetadataFile FileName="Arrays.xsd" MetadataType="Schema" ID="8dd29696-4065-436e-a8e4-b0a396b568bf" SourceId="1" SourceUrl="net.tcp://127.0.0.1:18888/ChatService/mex" />
+  </Metadata>
+  <Extensions>
+    <ExtensionFile FileName="configuration91.svcinfo" Name="configuration91.svcinfo" />
+    <ExtensionFile FileName="configuration.svcinfo" Name="configuration.svcinfo" />
+  </Extensions>
+</ReferenceGroup>
