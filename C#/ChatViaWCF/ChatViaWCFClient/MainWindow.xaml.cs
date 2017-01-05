@@ -31,8 +31,18 @@ namespace ChatViaWCFClient
 
         public void Refresh()
         {
-            RefreshLoginState();
-            RefreshOnlineUsers();
+            try
+            {
+                this.Dispatcher.Invoke(() =>
+                {
+                    RefreshLoginState();
+                    RefreshOnlineUsers();    
+                });
+            }
+            catch (Exception e)
+            {
+                MessageBox.Show(e.ToString());
+            }
         }
 
         private void RefreshLoginState()
