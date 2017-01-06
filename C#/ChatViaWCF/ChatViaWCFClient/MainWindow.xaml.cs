@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.ServiceModel;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -14,16 +15,20 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using ChatViaWCFClient.WCFChat;
+using log4net;
 
 namespace ChatViaWCFClient
 {
     /// <summary>
     /// MainWindow.xaml 的交互逻辑
     /// </summary>
-    public partial class MainWindow : Window, IChatCallback, IChatFactory, ILoginState, IRefresh
+    [CallbackBehavior(ConcurrencyMode = ConcurrencyMode.Reentrant, UseSynchronizationContext = false)]
+    public partial class MainWindow : Window, IChatCallback, IChatFactory, ILoginManager, IRefresh
     {
         public MainWindow()
         {
+            Thread.CurrentThread.Name = "Main线程";
+
             InitializeComponent();
 
             Refresh();
@@ -36,8 +41,16 @@ namespace ChatViaWCFClient
                 this.Dispatcher.Invoke(() =>
                 {
                     RefreshLoginState();
-                    RefreshOnlineUsers();    
                 });
+
+                /*登录状态下通道开放，注销状态下通道关闭，不做刷新*/
+                if (this.IsLogin)
+                {
+                    this.Dispatcher.Invoke(() =>
+                    {
+                        RefreshOnlineUsers();
+                    });
+                }
             }
             catch (Exception e)
             {
@@ -47,7 +60,7 @@ namespace ChatViaWCFClient
 
         private void RefreshLoginState()
         {
-            _userIdTextBlock.Text = UserId;
+            _userIdTextBlock.Text = UserState;
         }
 
         private void RefreshOnlineUsers()
@@ -58,18 +71,24 @@ namespace ChatViaWCFClient
 
         public ChatClient GetChatClient()
         {
-            if (_chatClient == null)
+            if (_chatClient != null)
+                return _chatClient;
+
+            lock (_locker)
             {
-                InstanceContext instanceContext = new InstanceContext(this);
-                _chatClient = new ChatClient(instanceContext);
-                var communicationObject = _chatClient as ICommunicationObject;
-                if (communicationObject != null)
+                if (_chatClient == null)
                 {
-                    communicationObject.Closing += communicationObject_Closing;
-                    communicationObject.Closed += CommunicationObjectOnClosed;
+                    InstanceContext instanceContext = new InstanceContext(this);
+                    _chatClient = new ChatClient(instanceContext);
+                    var communicationObject = _chatClient as ICommunicationObject;
+                    if (communicationObject != null)
+                    {
+                        communicationObject.Closing += communicationObject_Closing;
+                        communicationObject.Closed += CommunicationObjectOnClosed;
+                    }
                 }
+                return _chatClient;
             }
-            return _chatClient;
         }
 
         private void communicationObject_Closing(object sender, EventArgs e)
@@ -86,6 +105,8 @@ namespace ChatViaWCFClient
         {
             try
             {
+                _log.Debug(string.Format("Thread ID = {0}, Thread Name = {1}", Thread.CurrentThread.ManagedThreadId,
+                    Thread.CurrentThread.Name));
                 this.Dispatcher.Invoke(() =>
                 {
                     _msgTextBox.Text += string.Format("{0} {1}: {2}\n", DateTime.Now.ToString("HH:mm:ss"), userId, messageContent);    
@@ -130,9 +151,41 @@ namespace ChatViaWCFClient
 
         public string Pwd { get; set; }
 
-        public bool IsLogin { get; set; }
+        public string UserState { get; set; }
+
+        private bool _isLogin = false;
+        private bool? _isLoginLastState = null;
+        public bool IsLogin
+        {
+            get { return _isLogin; }
+            set
+            {
+                if (_isLoginLastState.HasValue && _isLoginLastState.Value == _isLogin)
+                {
+                    _log.Info(string.Format("_isLoginLastState = {0}, _isLogin = {1}相等，不再做登录或注销", _isLoginLastState, _isLogin));
+                }
+                else
+                {
+                    _isLogin = value;
+                    if (_isLogin)
+                    {
+                        GetChatClient().Login(UserId, Pwd);
+                    }
+                    else
+                    {
+                        GetChatClient().Logout(UserId, Pwd);
+                        GetChatClient().Close();
+                    }
+                    Refresh();
+                    _isLoginLastState = _isLogin;
+                }
+            }
+        }
 
         private ChatClient _chatClient = null;
 
+        private static object _locker = new object();
+
+        private static ILog _log = LogManager.GetLogger(typeof(MainWindow));
     }
 }

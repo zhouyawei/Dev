@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.ServiceModel;
+using System.ServiceModel.Channels;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -23,21 +24,23 @@ namespace ChatViaWCFServer.Server
             try
             {
                 var callbackChannel = OperationContext.Current.GetCallbackChannel<IChatCallback>();
+                var communicationObject = callbackChannel as ICommunicationObject;
+                var currentChannel = callbackChannel as IContextChannel;
                 if (!_onlineUserHashtable.ContainsKey(userId))
                 {
                     if (callbackChannel != null)
                     {
                         _onlineUserHashtable.Add(userId, callbackChannel);
-                        _log.Info(string.Format("用户{0}登录成功!", userId));
+                        _log.Info(string.Format("用户{0}登录成功! 会话ID = {1}", userId, currentChannel.SessionId));
                     }
                 }
                 else
                 {
                     _onlineUserHashtable[userId] = callbackChannel;
-                    _log.Info(string.Format("用户{0}再次登录成功!", userId));
+                    _log.Info(string.Format("用户{0}再次登录成功! 会话ID = {1}", userId, currentChannel.SessionId));
                 }
 
-                var communicationObject = callbackChannel as ICommunicationObject;
+
                 communicationObject.Closed += communicationObject_Closed;
 
                 if (!_onlineUserChannelHashtable.ContainsKey(callbackChannel))
@@ -45,13 +48,15 @@ namespace ChatViaWCFServer.Server
                     if (callbackChannel != null)
                     {
                         _onlineUserChannelHashtable.Add(callbackChannel, userId);
-                        _log.Info(string.Format("用户{0}的通道建立成功!", userId));
+                        _log.Info(string.Format("用户{0}的通道建立成功! HashCode = {1}", userId,
+                            communicationObject.GetHashCode()));
                     }
                 }
                 else
                 {
                     _onlineUserChannelHashtable[callbackChannel] = userId;
-                    _log.Info(string.Format("用户{0}的通道再次建立成功!", userId));
+                    _log.Info(string.Format("用户{0}的通道再次建立成功! HashCode = {1}",
+                        userId, communicationObject.GetHashCode()));
                 }
 
                 ThreadPool.QueueUserWorkItem(RefreshAllClients);
@@ -80,10 +85,12 @@ namespace ChatViaWCFServer.Server
         private void communicationObject_Closed(object sender, EventArgs e)
         {
             var callbackChannel = sender;
+            var currentChannel = callbackChannel as IContextChannel;
             if (_onlineUserChannelHashtable.ContainsKey(callbackChannel))
             {
                 var userId = _onlineUserChannelHashtable[callbackChannel];
-                _log.Info(string.Format("用户{0}的通道已经关闭!", userId));
+                _log.Info(string.Format("用户{0}的通道已经关闭! 会话ID = {1}, HashCode = {2}", userId,
+                    currentChannel.SessionId, callbackChannel.GetHashCode()));
             }
         }
 
@@ -91,17 +98,51 @@ namespace ChatViaWCFServer.Server
         {
             try
             {
-                if (_onlineUserHashtable.ContainsKey(userId))
+                if (!string.IsNullOrEmpty(userId))
                 {
-                    var callbackChannel = _onlineUserHashtable[userId];
-                    _onlineUserHashtable.Remove(userId);
-                    _onlineUserChannelHashtable.Remove(callbackChannel);
-                    _log.Info(string.Format("用户{0}注销成功", userId));
+                    if (_onlineUserHashtable.ContainsKey(userId))
+                    {
+                        try
+                        {
+                            var callbackChannel = _onlineUserHashtable[userId];
+                            var currentChannel = callbackChannel as IContextChannel;
+                            _onlineUserHashtable.Remove(userId);
+                            _onlineUserChannelHashtable.Remove(callbackChannel);
+                            _log.Info(string.Format("用户{0}注销成功, 会话ID = {1}, HashCode = {2}", userId,
+                                currentChannel.SessionId, callbackChannel.GetHashCode()));
+                        }
+                        catch (Exception ex)
+                        {
+                            _log.ErrorFormat("ChatImpl->Logout移除通道出现异常{0}", ex);
+                        }
+                        
+
+                        ThreadPool.QueueUserWorkItem((x) =>
+                        {
+                            WriteOnlineUserHashtable();
+                        });
+                    }
                 }
             }
             catch (Exception e)
             {
                 _log.ErrorFormat("ChatImpl->Logout出现异常{0}", e);
+            }
+        }
+
+        private void WriteOnlineUserHashtable()
+        {
+            if (_onlineUserHashtable.Keys.Count > 0)
+            {
+                foreach (var key in _onlineUserHashtable.Keys)
+                {
+                    var userId = key as string;
+                    _log.Debug(string.Format("当前在线用户: {0}", userId));
+                }
+            }
+            else
+            {
+                _log.Debug("当前在线用户数为0");
             }
         }
 

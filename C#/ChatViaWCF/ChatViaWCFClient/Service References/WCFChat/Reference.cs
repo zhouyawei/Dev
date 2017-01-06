@@ -12,7 +12,7 @@ namespace ChatViaWCFClient.WCFChat {
     
     
     [System.CodeDom.Compiler.GeneratedCodeAttribute("System.ServiceModel", "4.0.0.0")]
-    [System.ServiceModel.ServiceContractAttribute(Namespace="http://eastmoney.com", ConfigurationName="WCFChat.IChat", CallbackContract=typeof(ChatViaWCFClient.WCFChat.IChatCallback))]
+    [System.ServiceModel.ServiceContractAttribute(Namespace="http://eastmoney.com", ConfigurationName="WCFChat.IChat", CallbackContract=typeof(ChatViaWCFClient.WCFChat.IChatCallback), SessionMode=System.ServiceModel.SessionMode.Required)]
     public interface IChat {
         
         [System.ServiceModel.OperationContractAttribute(Action="http://eastmoney.com/IChat/Login", ReplyAction="http://eastmoney.com/IChat/LoginResponse")]

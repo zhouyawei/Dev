@@ -20,13 +20,13 @@ namespace ChatViaWCFClient
     /// </summary>
     public partial class LoginWindow : Window, INotifyPropertyChanged
     {
-        public LoginWindow(IChatFactory chatFactory, ILoginState loginState, IRefresh refresh, Window parentWindow, string promptString)
+        public LoginWindow(IChatFactory chatFactory, ILoginManager loginState, IRefresh refresh, Window parentWindow, string promptString)
         {
             this.DataContext = this;
             this.Owner = parentWindow;
 
             _chatFactory = chatFactory;
-            _loginState = loginState;
+            _loginManager = loginState;
             _refresh = refresh;
 
             InitializeComponent();
@@ -36,20 +36,13 @@ namespace ChatViaWCFClient
 
         private void Button_OnClick(object sender, RoutedEventArgs e)
         {
-            if (PromptString == "登录")
-            {
-                _chatFactory.GetChatClient().Login(_userNameTextBox.Text, _pwdTextBox.Password);
-                _loginState.IsLogin = true;
-            }
-            else
-            {
-                _chatFactory.GetChatClient().Logout(_userNameTextBox.Text, _pwdTextBox.Password);
-                _loginState.IsLogin = false;
-            }
+            var isLogin = PromptString == "登录" ? true : false;
+            _loginManager.UserState = string.Format("{0}{1}", _userNameTextBox.Text, isLogin ? "在线" : "离线");
+            _loginManager.UserId = _userNameTextBox.Text;
+            _loginManager.Pwd = _pwdTextBox.Password;
 
-            _loginState.UserId = string.Format("{0}{1}", _userNameTextBox.Text, _loginState.IsLogin ? "在线" : "离线");
-            _loginState.Pwd = _pwdTextBox.Password;
-            _refresh.Refresh();
+            _loginManager.IsLogin = isLogin;
+
             this.Close();
         }
 
@@ -61,7 +54,7 @@ namespace ChatViaWCFClient
         }
 
         private IChatFactory _chatFactory = null;
-        private ILoginState _loginState = null;
+        private ILoginManager _loginManager = null;
         private IRefresh _refresh = null;
 
         public event PropertyChangedEventHandler PropertyChanged;

@@ -21,7 +21,7 @@ namespace ChatViaWCFClient
         public void Initialize(Window mainWindow)
         {
             _chatFactory = mainWindow as IChatFactory;
-            _loginState = mainWindow as ILoginState;
+            _loginManager = mainWindow as ILoginManager;
         }
 
         protected override void OnExit(ExitEventArgs e)
@@ -30,7 +30,8 @@ namespace ChatViaWCFClient
             {
                 try
                 {
-                    _chatFactory.GetChatClient().Logout(_loginState.UserId, _loginState.Pwd);
+                    _loginManager.IsLogin = false;
+                    
                 }
                 catch (Exception ex)
                 {
@@ -41,6 +42,6 @@ namespace ChatViaWCFClient
         }
 
         private static IChatFactory _chatFactory = null;
-        private static ILoginState _loginState = null;
+        private static ILoginManager _loginManager = null;
     }
 }
