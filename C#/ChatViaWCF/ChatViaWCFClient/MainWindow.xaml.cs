@@ -160,7 +160,7 @@ namespace ChatViaWCFClient
             get { return _isLogin; }
             set
             {
-                if (_isLoginLastState.HasValue && _isLoginLastState.Value == _isLogin)
+                if (_isLoginLastState.HasValue && value == _isLoginLastState.Value)
                 {
                     _log.Info(string.Format("_isLoginLastState = {0}, _isLogin = {1}相等，不再做登录或注销", _isLoginLastState, _isLogin));
                 }

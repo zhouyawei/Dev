@@ -31,7 +31,6 @@ namespace ChatViaWCFClient
                 try
                 {
                     _loginManager.IsLogin = false;
-                    
                 }
                 catch (Exception ex)
                 {

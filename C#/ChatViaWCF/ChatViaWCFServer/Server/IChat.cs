@@ -8,7 +8,8 @@ using System.Threading.Tasks;
 namespace ChatViaWCFServer.Server
 {
     [ServiceContract(Namespace = "http://eastmoney.com",
-    CallbackContract = typeof(IChatCallback))]
+    CallbackContract = typeof(IChatCallback),
+    SessionMode = SessionMode.Required)]
     public interface IChat
     {
         [OperationContract]
@@ -23,7 +24,7 @@ namespace ChatViaWCFServer.Server
         [OperationContract]
         IList<string> GetOnlineUserList();
 
-        [OperationContract]
+        [OperationContract()]
         IList<string> GetOnlineUserListBesidesMe();
     }
 }
