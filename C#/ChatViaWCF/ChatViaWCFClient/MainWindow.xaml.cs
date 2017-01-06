@@ -51,6 +51,13 @@ namespace ChatViaWCFClient
                         RefreshOnlineUsers();
                     });
                 }
+                else
+                {
+                    this.Dispatcher.Invoke(() =>
+                    {
+                        _friendListBox.ItemsSource = null;
+                    });
+                }
             }
             catch (Exception e)
             {
@@ -111,7 +118,7 @@ namespace ChatViaWCFClient
                     Thread.CurrentThread.Name));
                 this.Dispatcher.Invoke(() =>
                 {
-                    _msgTextBox.Text += string.Format("{0} {1}: {2}\n", DateTime.Now.ToString("HH:mm:ss"), userId, messageContent);    
+                    _msgTextBox.Text += string.Format("{0} {1}: {2}\n", DateTime.Now.ToString("HH:mm:ss"), userId, messageContent);
                 });
             }
             catch (Exception ex)
