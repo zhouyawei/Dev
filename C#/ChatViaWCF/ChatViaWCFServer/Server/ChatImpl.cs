@@ -88,9 +88,12 @@ namespace ChatViaWCFServer.Server
             var currentChannel = callbackChannel as IContextChannel;
             if (_onlineUserChannelHashtable.ContainsKey(callbackChannel))
             {
-                var userId = _onlineUserChannelHashtable[callbackChannel];
+                var userId = _onlineUserChannelHashtable[callbackChannel] as string;
                 _log.Info(string.Format("用户{0}的通道已经关闭! 会话ID = {1}, HashCode = {2}", userId,
                     currentChannel.SessionId, callbackChannel.GetHashCode()));
+
+                /*移除关闭的通道*/
+                RemoveChannelFromServer(userId, callbackChannel as IChatCallback);
             }
         }
 
@@ -104,10 +107,9 @@ namespace ChatViaWCFServer.Server
                     {
                         try
                         {
-                            var callbackChannel = _onlineUserHashtable[userId];
+                            var callbackChannel = _onlineUserHashtable[userId] as IChatCallback;
                             var currentChannel = callbackChannel as IContextChannel;
-                            _onlineUserHashtable.Remove(userId);
-                            _onlineUserChannelHashtable.Remove(callbackChannel);
+                            RemoveChannelFromServer(userId, callbackChannel);
                             _log.Info(string.Format("用户{0}注销成功, 会话ID = {1}, HashCode = {2}", userId,
                                 currentChannel.SessionId, callbackChannel.GetHashCode()));
                         }
@@ -115,12 +117,15 @@ namespace ChatViaWCFServer.Server
                         {
                             _log.ErrorFormat("ChatImpl->Logout移除通道出现异常{0}", ex);
                         }
-                        
 
                         ThreadPool.QueueUserWorkItem((x) =>
                         {
                             WriteOnlineUserHashtable();
                         });
+                    }
+                    else
+                    {
+                        _log.Info(string.Format("_onlineUserHashtable中没有userId = {0}的用户", userId));
                     }
                 }
             }
@@ -128,6 +133,12 @@ namespace ChatViaWCFServer.Server
             {
                 _log.ErrorFormat("ChatImpl->Logout出现异常{0}", e);
             }
+        }
+
+        private void RemoveChannelFromServer(string userId, IChatCallback callbackChannel)
+        {
+            _onlineUserHashtable.Remove(userId);
+            _onlineUserChannelHashtable.Remove(callbackChannel);
         }
 
         private void WriteOnlineUserHashtable()

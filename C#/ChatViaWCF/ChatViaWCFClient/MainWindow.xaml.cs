@@ -93,12 +93,14 @@ namespace ChatViaWCFClient
 
         private void communicationObject_Closing(object sender, EventArgs e)
         {
-            MessageBox.Show("即将关闭与服务器的连接");
+            /*MessageBox.Show("即将关闭与服务器的连接");*/
+            _log.Info("即将关闭与服务器的连接");
         }
 
         private void CommunicationObjectOnClosed(object sender, EventArgs eventArgs)
         {
-            MessageBox.Show("与服务器的连接已关闭");
+            /*MessageBox.Show("与服务器的连接已关闭");*/
+            _log.Info("与服务器的连接已关闭");
         }
 
         public void ReceiveMessage(string userId, string messageContent)
@@ -133,12 +135,26 @@ namespace ChatViaWCFClient
         private void _sendMsgButton_OnClick(object sender, RoutedEventArgs e)
         {
             var msg = _sendMsgTextBox.Text;
-            if (_friendListBox.SelectedIndex != -1 && !string.IsNullOrEmpty(msg))
+
+            if (string.IsNullOrEmpty(msg))
+            {
+                MessageBox.Show("发送的内容不能为空!");
+                return;
+            }
+
+            if (_friendListBox.SelectedIndex == -1)
+            {
+                MessageBox.Show("请选择一个好友来发送消息~");
+                return;
+            }
+
+            if (_friendListBox.SelectedIndex != -1)
             {
                 var friendId = _friendListBox.SelectedItem as string;
                 try
                 {
                     GetChatClient().SendMessage(friendId, msg);
+                    _sendMsgTextBox.Text = string.Empty;
                 }
                 catch (Exception ex)
                 {
@@ -175,6 +191,7 @@ namespace ChatViaWCFClient
                     {
                         GetChatClient().Logout(UserId, Pwd);
                         GetChatClient().Close();
+                        _chatClient = null;
                     }
                     Refresh();
                     _isLoginLastState = _isLogin;
