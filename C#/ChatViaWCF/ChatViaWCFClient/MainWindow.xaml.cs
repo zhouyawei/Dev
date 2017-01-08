@@ -141,6 +141,11 @@ namespace ChatViaWCFClient
 
         private void _sendMsgButton_OnClick(object sender, RoutedEventArgs e)
         {
+            SendMessage();
+        }
+
+        private void SendMessage()
+        {
             var msg = _sendMsgTextBox.Text;
 
             if (string.IsNullOrEmpty(msg))
@@ -170,6 +175,14 @@ namespace ChatViaWCFClient
             }
         }
 
+        private void _sendMsgTextBox_KeyUp(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Enter)
+            {
+                SendMessage();
+            }
+        }
+
         public string UserId { get; set; }
 
         public string Pwd { get; set; }
@@ -193,14 +206,16 @@ namespace ChatViaWCFClient
                     if (_isLogin)
                     {
                         GetChatClient().Login(UserId, Pwd);
+                        Refresh();
                     }
                     else
                     {
                         GetChatClient().Logout(UserId, Pwd);
+                        Refresh();
                         GetChatClient().Close();
                         _chatClient = null;
                     }
-                    Refresh();
+                    
                     _isLoginLastState = _isLogin;
                 }
             }

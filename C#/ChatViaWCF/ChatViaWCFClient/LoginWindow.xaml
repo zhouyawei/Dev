@@ -5,7 +5,8 @@
         Title="{Binding Path=PromptString, 
                                   RelativeSource={RelativeSource Mode=Self}}" 
         Height="150" Width="300"
-        ResizeMode="NoResize">
+        ResizeMode="NoResize"
+        WindowStartupLocation="CenterOwner">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="*"></RowDefinition>
@@ -23,7 +24,8 @@
             <TextBlock Text="用户名" Grid.Row="0" Grid.Column="0" VerticalAlignment="Center" Margin="10,0,0,0"></TextBlock>
             <TextBox Name="_userNameTextBox" Grid.Row="0" Grid.Column="1" VerticalContentAlignment="Center" Margin="10,3"></TextBox>
             <TextBlock Text="密码" Grid.Row="1" Grid.Column="0" VerticalAlignment="Center" HorizontalAlignment="Center" Margin="10,0,0,0"></TextBlock>
-            <PasswordBox Name="_pwdTextBox" Grid.Row="1" Grid.Column="1" VerticalContentAlignment="Center" Margin="10,3"></PasswordBox>
+            <PasswordBox Name="_pwdTextBox" Grid.Row="1" Grid.Column="1" VerticalContentAlignment="Center" Margin="10,3"
+                         KeyUp="_pwdTextBox_KeyUp"></PasswordBox>
         </Grid>
         <Button Name="_loginButton" Grid.Row="1" Width="80" Margin="10" Click="Button_OnClick" 
                 Content="{Binding Path=PromptString, 

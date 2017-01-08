@@ -40,7 +40,10 @@
                         <ColumnDefinition Width="*"></ColumnDefinition>
                         <ColumnDefinition Width="Auto"></ColumnDefinition>
                     </Grid.ColumnDefinitions>
-                    <TextBox Name="_sendMsgTextBox" Grid.Column="0" MinWidth="320"></TextBox>
+                    <TextBox Name="_sendMsgTextBox" Grid.Column="0" MinWidth="320" 
+                             AcceptsReturn="False" 
+                             TextWrapping="WrapWithOverflow" 
+                             KeyUp="_sendMsgTextBox_KeyUp"></TextBox>
                     <Button Name="_sendMsgButton" Grid.Column="1" Click="_sendMsgButton_OnClick">发送</Button>
                 </Grid>
             </Grid>

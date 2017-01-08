@@ -59,7 +59,10 @@ namespace ChatViaWCFServer.Server
                         userId, communicationObject.GetHashCode()));
                 }
 
-                ThreadPool.QueueUserWorkItem(RefreshAllClients);
+                ThreadPool.QueueUserWorkItem((x) =>
+                {
+                    RefreshAllClients();
+                });
             }
             catch (Exception e)
             {
@@ -67,7 +70,7 @@ namespace ChatViaWCFServer.Server
             }
         }
 
-        private void RefreshAllClients(object state)
+        private void RefreshAllClients()
         {
             foreach (IChatCallback channel in _onlineUserChannelHashtable.Keys)
             {
@@ -120,6 +123,7 @@ namespace ChatViaWCFServer.Server
 
                         ThreadPool.QueueUserWorkItem((x) =>
                         {
+                            RefreshAllClients();
                             WriteOnlineUserHashtable();
                         });
                     }
@@ -193,7 +197,7 @@ namespace ChatViaWCFServer.Server
             {
                 _log.ErrorFormat("ChatImpl->GetOnlineUserList出现异常{0}", e);
             }
-            
+
             return onlineUsers;
         }
 

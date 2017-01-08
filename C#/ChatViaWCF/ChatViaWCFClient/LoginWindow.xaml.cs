@@ -36,6 +36,19 @@ namespace ChatViaWCFClient
 
         private void Button_OnClick(object sender, RoutedEventArgs e)
         {
+            DoLoginOrLogout();
+        }
+
+        private void _pwdTextBox_KeyUp(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Enter)
+            {
+                DoLoginOrLogout();
+            }
+        }
+
+        private void DoLoginOrLogout()
+        {
             var isLogin = PromptString == "登录" ? true : false;
             _loginManager.UserState = string.Format("{0}{1}", _userNameTextBox.Text, isLogin ? "在线" : "离线");
             _loginManager.UserId = _userNameTextBox.Text;
