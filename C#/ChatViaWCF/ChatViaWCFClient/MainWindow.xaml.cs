@@ -78,23 +78,40 @@ namespace ChatViaWCFClient
 
         public ChatClient GetChatClient()
         {
-            if (_chatClient != null)
+            if (_chatClient != null &&
+                _chatClient.State != CommunicationState.Faulted &&
+                _chatClient.State != CommunicationState.Closed &&
+                _chatClient.State != CommunicationState.Closing)
+            {
                 return _chatClient;
+            }
 
             lock (_locker)
             {
                 if (_chatClient == null)
                 {
-                    InstanceContext instanceContext = new InstanceContext(this);
-                    _chatClient = new ChatClient(instanceContext);
-                    var communicationObject = _chatClient as ICommunicationObject;
-                    if (communicationObject != null)
-                    {
-                        communicationObject.Closing += communicationObject_Closing;
-                        communicationObject.Closed += CommunicationObjectOnClosed;
-                    }
+                    CreateChannel();
+                }
+                else
+                {
+                    /*重新建立通道*/
+                    CreateChannel();
+                    _chatClient.Login(UserId, Pwd);
+                    _log.Info(string.Format("UserId = {0}重新建立通道", UserId));
                 }
                 return _chatClient;
+            }
+        }
+
+        private void CreateChannel()
+        {
+            InstanceContext instanceContext = new InstanceContext(this);
+            _chatClient = new ChatClient(instanceContext);
+            var communicationObject = _chatClient as ICommunicationObject;
+            if (communicationObject != null)
+            {
+                communicationObject.Closing += communicationObject_Closing;
+                communicationObject.Closed += CommunicationObjectOnClosed;
             }
         }
 

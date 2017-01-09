@@ -97,6 +97,9 @@ namespace ChatViaWCFServer.Server
 
                 /*移除关闭的通道*/
                 RemoveChannelFromServer(userId, callbackChannel as IChatCallback);
+                
+                /*刷一下在线用户*/
+                RefreshOnlineUsers();
             }
         }
 
@@ -121,11 +124,7 @@ namespace ChatViaWCFServer.Server
                             _log.ErrorFormat("ChatImpl->Logout移除通道出现异常{0}", ex);
                         }
 
-                        ThreadPool.QueueUserWorkItem((x) =>
-                        {
-                            RefreshAllClients();
-                            WriteOnlineUserHashtable();
-                        });
+                        RefreshOnlineUsers();
                     }
                     else
                     {
@@ -137,6 +136,15 @@ namespace ChatViaWCFServer.Server
             {
                 _log.ErrorFormat("ChatImpl->Logout出现异常{0}", e);
             }
+        }
+
+        private void RefreshOnlineUsers()
+        {
+            ThreadPool.QueueUserWorkItem((x) =>
+            {
+                RefreshAllClients();
+                WriteOnlineUserHashtable();
+            });
         }
 
         private void RemoveChannelFromServer(string userId, IChatCallback callbackChannel)
