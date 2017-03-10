@@ -19,7 +19,17 @@ namespace Log4NetMemoryOptimizedAppender
                 Directory.CreateDirectory(_appLogPath);
             }
 
-            File.AppendAllText(_appLogPath + DateTime.Now.ToString("yyyy-MM-dd") + ".log", logContent + "\r\n");
+            File.AppendAllText(GetFileName(), GetFileContent(logContent));
+        }
+
+        private static string GetFileName()
+        {
+            return _appLogPath + DateTime.Now.ToString("yyyy-MM-dd") + ".log";
+        }
+
+        private static string GetFileContent(string logContent)
+        {
+            return DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss,fff -- ") + logContent + "\r\n";
         }
     }
 }
