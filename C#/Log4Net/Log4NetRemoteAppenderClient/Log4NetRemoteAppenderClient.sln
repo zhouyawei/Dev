@@ -1,0 +1,43 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2013
+VisualStudioVersion = 12.0.40629.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Log4NetRemoteAppenderClient", "Log4NetRemoteAppenderClient\Log4NetRemoteAppenderClient.csproj", "{71C13DF1-F7C8-4138-AF7C-C936A4512DD1}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Log4NetWCFAppender", "..\Log4NetWCFAppender\Log4NetWCFAppender.csproj", "{2406B9CD-8373-4B98-933A-35AEE0E0FB15}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Log4NetMemoryOptimizedAppender", "..\Log4NetMemoryOptimizedAppender\Log4NetMemoryOptimizedAppender.csproj", "{F96D5F1F-A99B-4A2B-84A9-424452023BD5}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Log4NetClientWindowsService", "Log4NetClientWindowsService\Log4NetClientWindowsService.csproj", "{2452A72D-BAC0-4EF6-AAA1-7B58BBEEFE42}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{71C13DF1-F7C8-4138-AF7C-C936A4512DD1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{71C13DF1-F7C8-4138-AF7C-C936A4512DD1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{71C13DF1-F7C8-4138-AF7C-C936A4512DD1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{71C13DF1-F7C8-4138-AF7C-C936A4512DD1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2406B9CD-8373-4B98-933A-35AEE0E0FB15}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2406B9CD-8373-4B98-933A-35AEE0E0FB15}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2406B9CD-8373-4B98-933A-35AEE0E0FB15}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2406B9CD-8373-4B98-933A-35AEE0E0FB15}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F96D5F1F-A99B-4A2B-84A9-424452023BD5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F96D5F1F-A99B-4A2B-84A9-424452023BD5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F96D5F1F-A99B-4A2B-84A9-424452023BD5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F96D5F1F-A99B-4A2B-84A9-424452023BD5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2452A72D-BAC0-4EF6-AAA1-7B58BBEEFE42}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2452A72D-BAC0-4EF6-AAA1-7B58BBEEFE42}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2452A72D-BAC0-4EF6-AAA1-7B58BBEEFE42}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2452A72D-BAC0-4EF6-AAA1-7B58BBEEFE42}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(Performance) = preSolution
+		HasPerformanceSessions = true
+	EndGlobalSection
+EndGlobal
