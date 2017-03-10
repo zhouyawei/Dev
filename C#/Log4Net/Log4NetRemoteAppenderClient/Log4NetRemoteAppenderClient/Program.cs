@@ -23,7 +23,8 @@ namespace Log4NetRemoteAppenderClient
             //    _log.Info(string.Format("{0} I Love u~", i));
             //}
 
-            StreamReader streamReader = new StreamReader(@"E:\WCF日志\20161021.log", Encoding.GetEncoding("GB2312"));
+            //StreamReader streamReader = new StreamReader(@"E:\WCF日志\20161021.log", Encoding.GetEncoding("GB2312"));
+            StreamReader streamReader = new StreamReader(@"20161021.log", Encoding.GetEncoding("GB2312"));
             string line;
             while ((line = streamReader.ReadLine()) != null)
             {
