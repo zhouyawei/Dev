@@ -78,7 +78,7 @@ namespace ChatViaSocketServer
 
         private void AcceptSocketAsyncEventArgs_Completed(object sender, SocketAsyncEventArgs e)
         {
-            _log.Debug("同步Accept调用");
+            _log.Debug("异步Accept调用");
             ProcessAccept(e);
         }
 
@@ -110,7 +110,11 @@ namespace ChatViaSocketServer
                 Interlocked.Add(ref _totalBytesReceived, (long)readEventArgs.BytesTransferred);
                 _log.Info(string.Format("目前服务器已接受{0}字节的数据", _totalBytesReceived));
 
+                /*读取缓冲区中的数据*/
+                byte[] buffer = readEventArgs.Buffer;
+
                 /*将数据发回客户端*/
+                //echo the data received back to the client
                 readEventArgs.SetBuffer(readEventArgs.Offset, readEventArgs.BytesTransferred);
                 bool willRaiseEvent = asyncUserToken.Socket.SendAsync(readEventArgs);
                 if (!willRaiseEvent)
@@ -128,7 +132,9 @@ namespace ChatViaSocketServer
         {
             if (socketAsyncEventArgs.SocketError == SocketError.Success)
             {
+                // done echoing data back to the client
                 AsyncUserToken asyncUserToken = socketAsyncEventArgs.UserToken as AsyncUserToken;
+                // read the next block of data send from the client
                 bool willRaiseEvent = asyncUserToken.Socket.ReceiveAsync(socketAsyncEventArgs);
                 if (!willRaiseEvent)
                 {
