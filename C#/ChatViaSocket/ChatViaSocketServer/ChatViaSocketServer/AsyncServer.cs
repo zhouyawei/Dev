@@ -18,7 +18,7 @@ namespace ChatViaSocketServer
             _listenBacklog = _maxNumOfConnections = numOfConnections;
             _maxNumberOfConnectionsSemaphore = new Semaphore(_listenBacklog, _listenBacklog);
             _reveiveBufferSize = receiveBufferSize;
-            _bufferManager = new BufferManager(receiveBufferSize * numOfConnections * OPS_TO_PREALLOC,
+            _bufferManager = new BufferManager(receiveBufferSize*numOfConnections*OPS_TO_PREALLOC,
                 _reveiveBufferSize);
             _socketAsyncEventArgsPool = new SocketAsyncEventArgsPool();
         }
@@ -107,19 +107,57 @@ namespace ChatViaSocketServer
             AsyncUserToken asyncUserToken = readEventArgs.UserToken as AsyncUserToken;
             if (readEventArgs.BytesTransferred > 0 && readEventArgs.SocketError == SocketError.Success)
             {
-                Interlocked.Add(ref _totalBytesReceived, (long)readEventArgs.BytesTransferred);
+                Interlocked.Add(ref _totalBytesReceived, (long) readEventArgs.BytesTransferred);
                 _log.Info(string.Format("目前服务器已接受{0}字节的数据", _totalBytesReceived));
 
                 /*读取缓冲区中的数据*/
-                byte[] buffer = readEventArgs.Buffer;
-
-                /*将数据发回客户端*/
-                //echo the data received back to the client
-                readEventArgs.SetBuffer(readEventArgs.Offset, readEventArgs.BytesTransferred);
-                bool willRaiseEvent = asyncUserToken.Socket.SendAsync(readEventArgs);
-                if (!willRaiseEvent)
+                /*半包, 粘包*/
+                try
                 {
-                    ProcessSend(readEventArgs);
+                    /*读取数据*/
+                    byte[] dataTransfered = new byte[readEventArgs.BytesTransferred];
+                    Array.Copy(readEventArgs.Buffer, readEventArgs.Offset, dataTransfered, 0, readEventArgs.BytesTransferred);
+                    asyncUserToken.Buffer.AddRange(dataTransfered);
+
+                    /* 4字节包头(长度)+包体*/
+                    /* Header + Body */
+
+                    /* 接收到的数据可能小于一个包的大小，需分多次接收
+                     * 先判断包头的大小，够一个完整的包再处理
+                     */
+
+                    while (asyncUserToken.Buffer.Count > 4)
+                    {
+                        /*判断包的长度*/
+                        byte[] lenBytes = asyncUserToken.Buffer.GetRange(0, 4).ToArray();
+                        int bodyLen = BitConverter.ToInt32(lenBytes, 0);
+
+                        var packageLength = 4 + bodyLen; //一个数据包的长度，4字节包头 + 包体的长度
+                        var receivedLengthExcludeHeader = asyncUserToken.Buffer.Count - 4; //去掉包头之后接收的长度
+
+                        /*接收的数据长度不够时，退出循环，让程序继续接收*/
+                        if (bodyLen > receivedLengthExcludeHeader)
+                        {
+                            break;
+                        }
+
+                        /*接收的数据长度大于一个包的长度时，则提取出来，交给后面的程序去处理*/
+                        byte[] receivedBytes = asyncUserToken.Buffer.GetRange(4, packageLength).ToArray();
+                        asyncUserToken.Buffer.RemoveRange(0, packageLength); /*从缓冲区重移出取出的数据*/
+
+                        /*抽象数据处理方法，receivedBytes是一个完整的包*/
+                        ProcessData(asyncUserToken, receivedBytes);
+                    }
+
+                    /*继续接收, 非常关键的一步*/
+                    if (!asyncUserToken.Socket.ReceiveAsync(readEventArgs))
+                    {
+                        this.ProcessReceive(readEventArgs);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _log.ErrorFormat("AsyncServer->ProcessReceive出现异常, Exception = {0}", ex);
                 }
             }
             else
@@ -127,6 +165,43 @@ namespace ChatViaSocketServer
                 CloseClientSocket(readEventArgs);
             }
         }
+
+        /*抽象数据处理方法，receivedBytes是一个完整的包*/
+        protected virtual void ProcessData(AsyncUserToken asyncUserToken, byte[] receivedBytes)
+        {
+            
+        }
+
+        /*对数据进行打包,然后再发送, dataInBytes是一个完整的数据包*/
+        public void SendData(AsyncUserToken token, byte[] dataInBytes)
+        {
+            if (token == null || token.Socket == null || !token.Socket.Connected)
+            {
+                return;
+            }
+
+            try
+            {
+                /*对要发送的消息,制定简单协议,头4字节指定包的大小,方便客户端接收(协议可以自己定)*/
+                byte[] buffer = new byte[dataInBytes.Length + 4];
+                byte[] bodyLength = BitConverter.GetBytes(dataInBytes.Length); /*将body的长度转成字节数组*/
+
+                Array.Copy(bodyLength, buffer, 4); //bodyLength
+                Array.Copy(dataInBytes, 0, buffer, 4, dataInBytes.Length); //
+
+                //token.Socket.Send(buff);  //这句也可以发送, 可根据自己的需要来选择  
+                //新建异步发送对象, 发送消息  
+                SocketAsyncEventArgs sendArg = new SocketAsyncEventArgs();
+                sendArg.UserToken = token;
+                sendArg.SetBuffer(buffer, 0, buffer.Length);  //将数据放置进去.  
+
+                token.Socket.SendAsync(sendArg);
+            }
+            catch (Exception ex)
+            {
+                _log.ErrorFormat("AsyncServer->SendData出现异常, Exception = {0}", ex);
+            }
+        }  
 
         private void ProcessSend(SocketAsyncEventArgs socketAsyncEventArgs)
         {
@@ -183,6 +258,9 @@ namespace ChatViaSocketServer
                     throw new ArgumentException("The last operation completed on the socket was not a receive or send");
             }
         }
+
+        private const int BUFFER_SIZE = 4096;
+        private const int DATA_CHUNK_LENGTH_HEADER = 4;
 
         private Socket _listenSocket = null;
         private int _listenBacklog = 1000;

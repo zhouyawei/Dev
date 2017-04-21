@@ -50,6 +50,7 @@
     <Compile Include="AsyncServer.cs" />
     <Compile Include="AsyncUserToken.cs" />
     <Compile Include="BufferManager.cs" />
+    <Compile Include="enum.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Server.cs" />
