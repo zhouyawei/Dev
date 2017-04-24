@@ -129,14 +129,14 @@ namespace ChatViaSocketServer
                      * 先判断包头的大小，够一个完整的包再处理
                      */
 
-                    while (asyncUserToken.Buffer.Count > 4)
+                    while (asyncUserToken.Buffer.Count > DATA_CHUNK_HEADER_LENGTH)
                     {
                         /*判断包的长度*/
-                        byte[] lenBytes = asyncUserToken.Buffer.GetRange(0, 4).ToArray();
-                        int bodyLen = BitConverter.ToInt32(lenBytes, 0);
+                        byte[] lenBytes = asyncUserToken.Buffer.GetRange(0, DATA_CHUNK_HEADER_LENGTH).ToArray();
+                        int bodyLen = IPAddress.NetworkToHostOrder(BitConverter.ToInt32(lenBytes, 0));
 
-                        var packageLength = 4 + bodyLen; //一个数据包的长度，4字节包头 + 包体的长度
-                        var receivedLengthExcludeHeader = asyncUserToken.Buffer.Count - 4; //去掉包头之后接收的长度
+                        var packageLength = DATA_CHUNK_HEADER_LENGTH + bodyLen; //一个数据包的长度，4字节包头 + 包体的长度
+                        var receivedLengthExcludeHeader = asyncUserToken.Buffer.Count - DATA_CHUNK_HEADER_LENGTH; //去掉包头之后接收的长度
 
                         /*接收的数据长度不够时，退出循环，让程序继续接收*/
                         if (bodyLen > receivedLengthExcludeHeader)
@@ -145,7 +145,7 @@ namespace ChatViaSocketServer
                         }
 
                         /*接收的数据长度大于一个包的长度时，则提取出来，交给后面的程序去处理*/
-                        byte[] receivedBytes = asyncUserToken.Buffer.GetRange(4, packageLength).ToArray();
+                        byte[] receivedBytes = asyncUserToken.Buffer.GetRange(DATA_CHUNK_HEADER_LENGTH, packageLength).ToArray();
                         asyncUserToken.Buffer.RemoveRange(0, packageLength); /*从缓冲区重移出取出的数据*/
 
                         /*抽象数据处理方法，receivedBytes是一个完整的包*/
@@ -186,7 +186,7 @@ namespace ChatViaSocketServer
             try
             {
                 /*对要发送的消息,制定简单协议,头4字节指定包的大小,方便客户端接收(协议可以自己定)*/
-                byte[] buffer = new byte[dataInBytes.Length + DATA_CHUNK_LENGTH_HEADER];
+                byte[] buffer = new byte[dataInBytes.Length + DATA_CHUNK_HEADER_LENGTH];
                 byte[] bodyLength = BitConverter.GetBytes(dataInBytes.Length); /*将body的长度转成字节数组*/
 
                 Array.Copy(bodyLength, buffer, 4); //bodyLength
@@ -262,7 +262,7 @@ namespace ChatViaSocketServer
         }
 
         private const int BUFFER_SIZE = 4096;
-        private const int DATA_CHUNK_LENGTH_HEADER = 4;
+        private const int DATA_CHUNK_HEADER_LENGTH = 4;
 
         private Socket _listenSocket = null;
         private int _listenBacklog = 1000;

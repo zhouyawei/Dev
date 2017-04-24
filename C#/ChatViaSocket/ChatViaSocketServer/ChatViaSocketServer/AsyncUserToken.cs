@@ -11,9 +11,9 @@ namespace ChatViaSocketServer
     {
         public AsyncUserToken()
         {
-            ReceiveSocketAsyncEventArgs = new SocketAsyncEventArgs();
-
-            SendSocketAsyncEventArgs = new SocketAsyncEventArgs();
+            _buffer = new List<byte>();
+            _receiveSocketAsyncEventArgs = new SocketAsyncEventArgs();
+            _sendSocketAsyncEventArgs = new SocketAsyncEventArgs();
         }
 
         public void Reset()
@@ -22,8 +22,12 @@ namespace ChatViaSocketServer
         }
 
         public Socket Socket { get; set; }
-        public List<byte> Buffer { get; set; }
-        public SocketAsyncEventArgs ReceiveSocketAsyncEventArgs { get; set; }
-        public SocketAsyncEventArgs SendSocketAsyncEventArgs { get; set; }
+        public List<byte> Buffer { get { return _buffer; } }
+        public SocketAsyncEventArgs ReceiveSocketAsyncEventArgs { get { return _receiveSocketAsyncEventArgs; } }
+        public SocketAsyncEventArgs SendSocketAsyncEventArgs { get { return _sendSocketAsyncEventArgs; } }
+
+        private readonly List<byte> _buffer = null;
+        private readonly SocketAsyncEventArgs _receiveSocketAsyncEventArgs = null;
+        private readonly SocketAsyncEventArgs _sendSocketAsyncEventArgs = null;
     }
 }

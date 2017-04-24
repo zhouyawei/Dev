@@ -14,7 +14,7 @@ namespace ChatViaSocketServer
     {
         static void Main(string[] args)
         {
-            AsyncServer server = new AsyncServer(1000, 4096);
+            AsyncServer server = new EchoAsyncServer(1000);
             server.Init();
             server.Start(GetIPEndPoint());
 
