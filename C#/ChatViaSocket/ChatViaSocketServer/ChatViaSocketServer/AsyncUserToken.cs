@@ -9,8 +9,21 @@ namespace ChatViaSocketServer
 {
     class AsyncUserToken
     {
-        public Socket Socket { get; set; }
+        public AsyncUserToken()
+        {
+            ReceiveSocketAsyncEventArgs = new SocketAsyncEventArgs();
 
+            SendSocketAsyncEventArgs = new SocketAsyncEventArgs();
+        }
+
+        public void Reset()
+        {
+            Buffer.Clear();
+        }
+
+        public Socket Socket { get; set; }
         public List<byte> Buffer { get; set; }
+        public SocketAsyncEventArgs ReceiveSocketAsyncEventArgs { get; set; }
+        public SocketAsyncEventArgs SendSocketAsyncEventArgs { get; set; }
     }
 }

@@ -13,14 +13,14 @@ namespace ChatViaSocketServer
 {
     class AsyncServer
     {
-        public AsyncServer(int numOfConnections, int receiveBufferSize)
+        public AsyncServer(int numOfConnections, int receiveBufferSize = BUFFER_SIZE)
         {
             _listenBacklog = _maxNumOfConnections = numOfConnections;
             _maxNumberOfConnectionsSemaphore = new Semaphore(_listenBacklog, _listenBacklog);
             _reveiveBufferSize = receiveBufferSize;
-            _bufferManager = new BufferManager(receiveBufferSize*numOfConnections*OPS_TO_PREALLOC,
+            _bufferManager = new BufferManager(receiveBufferSize * numOfConnections * OPS_TO_PREALLOC,
                 _reveiveBufferSize);
-            _socketAsyncEventArgsPool = new SocketAsyncEventArgsPool();
+            _userTokenPool = new UserTokenPool();
         }
 
         public void Init()
@@ -29,13 +29,17 @@ namespace ChatViaSocketServer
 
             for (int i = 0; i < _listenBacklog; i++)
             {
-                SocketAsyncEventArgs socketAsyncEventArgs = new SocketAsyncEventArgs();
-                socketAsyncEventArgs.Completed += IO_Completed;
-                socketAsyncEventArgs.UserToken = new AsyncUserToken();
+                AsyncUserToken userToken = new AsyncUserToken();
+                userToken.ReceiveSocketAsyncEventArgs.Completed += IO_Completed;
+                userToken.ReceiveSocketAsyncEventArgs.UserToken = userToken;
 
-                _bufferManager.SetBuffer(socketAsyncEventArgs);
+                userToken.SendSocketAsyncEventArgs.Completed += IO_Completed;
+                userToken.SendSocketAsyncEventArgs.UserToken = userToken;
 
-                _socketAsyncEventArgsPool.Push(socketAsyncEventArgs);
+                _bufferManager.SetBuffer(userToken.ReceiveSocketAsyncEventArgs);
+                _bufferManager.SetBuffer(userToken.SendSocketAsyncEventArgs);
+
+                _userTokenPool.Push(userToken);
             }
 
         }
@@ -87,14 +91,13 @@ namespace ChatViaSocketServer
             Interlocked.Increment(ref _numOfConnectedSocket);
             _log.Info(string.Format("客户端连接成功, 当前共有{0}个客户端连接到服务器", _numOfConnectedSocket));
 
-            var readEventArgs = _socketAsyncEventArgsPool.Pop();
-            var userToken = readEventArgs.UserToken as AsyncUserToken;
+            var userToken = _userTokenPool.Pop();
             userToken.Socket = acceptSocketAsyncEventArgs.AcceptSocket;
 
-            bool willRaiseEvent = userToken.Socket.ReceiveAsync(readEventArgs);
+            bool willRaiseEvent = userToken.Socket.ReceiveAsync(userToken.ReceiveSocketAsyncEventArgs);
             if (!willRaiseEvent)
             {
-                ProcessReceive(readEventArgs);
+                ProcessReceive(userToken.ReceiveSocketAsyncEventArgs);
             }
 
             /*接收下一个请求*/
@@ -107,7 +110,7 @@ namespace ChatViaSocketServer
             AsyncUserToken asyncUserToken = readEventArgs.UserToken as AsyncUserToken;
             if (readEventArgs.BytesTransferred > 0 && readEventArgs.SocketError == SocketError.Success)
             {
-                Interlocked.Add(ref _totalBytesReceived, (long) readEventArgs.BytesTransferred);
+                Interlocked.Add(ref _totalBytesReceived, (long)readEventArgs.BytesTransferred);
                 _log.Info(string.Format("目前服务器已接受{0}字节的数据", _totalBytesReceived));
 
                 /*读取缓冲区中的数据*/
@@ -162,14 +165,14 @@ namespace ChatViaSocketServer
             }
             else
             {
-                CloseClientSocket(readEventArgs);
+                CloseClientSocket(asyncUserToken);
             }
         }
 
         /*抽象数据处理方法，receivedBytes是一个完整的包*/
         protected virtual void ProcessData(AsyncUserToken asyncUserToken, byte[] receivedBytes)
         {
-            
+
         }
 
         /*对数据进行打包,然后再发送, dataInBytes是一个完整的数据包*/
@@ -183,32 +186,31 @@ namespace ChatViaSocketServer
             try
             {
                 /*对要发送的消息,制定简单协议,头4字节指定包的大小,方便客户端接收(协议可以自己定)*/
-                byte[] buffer = new byte[dataInBytes.Length + 4];
+                byte[] buffer = new byte[dataInBytes.Length + DATA_CHUNK_LENGTH_HEADER];
                 byte[] bodyLength = BitConverter.GetBytes(dataInBytes.Length); /*将body的长度转成字节数组*/
 
                 Array.Copy(bodyLength, buffer, 4); //bodyLength
                 Array.Copy(dataInBytes, 0, buffer, 4, dataInBytes.Length); //
 
                 //token.Socket.Send(buff);  //这句也可以发送, 可根据自己的需要来选择  
-                //新建异步发送对象, 发送消息  
-                SocketAsyncEventArgs sendArg = new SocketAsyncEventArgs();
-                sendArg.UserToken = token;
-                sendArg.SetBuffer(buffer, 0, buffer.Length);  //将数据放置进去.  
+                
+                //将数据放置进去.  
+                Array.Copy(buffer, 0, token.SendSocketAsyncEventArgs.Buffer, 0, buffer.Length);
 
-                token.Socket.SendAsync(sendArg);
+                token.Socket.SendAsync(token.SendSocketAsyncEventArgs);
             }
             catch (Exception ex)
             {
                 _log.ErrorFormat("AsyncServer->SendData出现异常, Exception = {0}", ex);
             }
-        }  
+        }
 
         private void ProcessSend(SocketAsyncEventArgs socketAsyncEventArgs)
         {
+            // done echoing data back to the client
+            AsyncUserToken asyncUserToken = socketAsyncEventArgs.UserToken as AsyncUserToken;
             if (socketAsyncEventArgs.SocketError == SocketError.Success)
-            {
-                // done echoing data back to the client
-                AsyncUserToken asyncUserToken = socketAsyncEventArgs.UserToken as AsyncUserToken;
+            {   
                 // read the next block of data send from the client
                 bool willRaiseEvent = asyncUserToken.Socket.ReceiveAsync(socketAsyncEventArgs);
                 if (!willRaiseEvent)
@@ -218,14 +220,12 @@ namespace ChatViaSocketServer
             }
             else
             {
-                CloseClientSocket(socketAsyncEventArgs);
+                CloseClientSocket(asyncUserToken);
             }
         }
 
-        private void CloseClientSocket(SocketAsyncEventArgs socketAsyncEventArgs)
+        private void CloseClientSocket(AsyncUserToken asyncUserToken)
         {
-            AsyncUserToken asyncUserToken = socketAsyncEventArgs.UserToken as AsyncUserToken;
-
             try
             {
                 asyncUserToken.Socket.Shutdown(SocketShutdown.Send);
@@ -237,11 +237,13 @@ namespace ChatViaSocketServer
 
             asyncUserToken.Socket.Close();
 
+            asyncUserToken.Reset();
+
             Interlocked.Decrement(ref _numOfConnectedSocket);
             _maxNumberOfConnectionsSemaphore.Release();
             _log.Info(string.Format("客户端关闭了一个连接, 当前的客户端连接数为{0}", _numOfConnectedSocket));
 
-            _socketAsyncEventArgsPool.Push(socketAsyncEventArgs);
+            _userTokenPool.Push(asyncUserToken);
         }
 
         private void IO_Completed(object sender, SocketAsyncEventArgs e)
@@ -269,7 +271,7 @@ namespace ChatViaSocketServer
         private int _maxNumOfConnections;
         private int _reveiveBufferSize;
         private long _totalBytesReceived = 0;
-        private SocketAsyncEventArgsPool _socketAsyncEventArgsPool = null;
+        private UserTokenPool _userTokenPool = null;
         private BufferManager _bufferManager;
         private const int OPS_TO_PREALLOC = 2;
         private ManualResetEvent _serverQuitEvent = new ManualResetEvent(false);

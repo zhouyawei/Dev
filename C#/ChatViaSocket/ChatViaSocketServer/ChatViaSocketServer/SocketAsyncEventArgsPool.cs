@@ -8,16 +8,16 @@ using System.Threading.Tasks;
 
 namespace ChatViaSocketServer
 {
-    class SocketAsyncEventArgsPool
+    class UserTokenPool
     {
-        public void Push(SocketAsyncEventArgs e)
+        public void Push(AsyncUserToken token)
         {
-            _stack.Push(e);
+            _stack.Push(token);
         }
 
-        public SocketAsyncEventArgs Pop()
+        public AsyncUserToken Pop()
         {
-            return _stack.Pop() as SocketAsyncEventArgs;
+            return _stack.Pop() as AsyncUserToken;
         }
 
         private readonly Stack _stack = Stack.Synchronized(new Stack());
