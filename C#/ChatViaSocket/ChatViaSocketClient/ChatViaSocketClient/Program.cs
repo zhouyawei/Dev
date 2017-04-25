@@ -21,8 +21,8 @@ namespace ChatViaSocketClient
 
             string content = GetSendData();
             byte[] messagesInBytes = Encoding.UTF8.GetBytes(content);
-            
-            SendData(clientSocket, messagesInBytes);
+
+            SendDataChunk(clientSocket, messagesInBytes);
 
             clientSocket.Close();
         }
@@ -81,6 +81,70 @@ namespace ChatViaSocketClient
 
                     /*更新包计数器*/
                     sourceIndex += dataChunkBodyLengh;
+                }
+            }
+        }
+
+        private static void SendDataChunk(Socket clientSocket, byte[] dataInBytes)
+        {
+            int dataChunkBodyLengh = BUFFER_SIZE - 4;//包的数据长度
+            byte[] dataChunk = new byte[BUFFER_SIZE];
+            int sourceIndex = 0;
+            int destinationFirstDataChunkIndex = 4;
+
+            /*先发4个字节的表示数据的长度，后面的是数据内容*/
+            byte[] dataTotalLengthInBytes = BitConverter.GetBytes(IPAddress.HostToNetworkOrder(dataInBytes.Length));//数据总长度
+
+            if (dataInBytes.Length <= dataChunkBodyLengh)
+            {
+                var dataBuffer = dataInBytes.ToArray();
+                /*数据复制*/
+                Array.Copy(dataInBytes, sourceIndex, dataChunk, destinationFirstDataChunkIndex, dataInBytes.Length);
+                /*数据总长度写入每个包*/
+                Array.Copy(dataTotalLengthInBytes, dataChunk, dataTotalLengthInBytes.Length);
+                var dataChunkLength = dataInBytes.Length + dataTotalLengthInBytes.Length;
+                int bytesSend = clientSocket.Send(dataChunk, dataChunkLength, SocketFlags.None);
+            }
+            else
+            {
+                /*发送的数据量大于一个buffer的最大长度，需要将数据分包*/
+                int numOfDataChunk = (int)Math.Ceiling(((dataInBytes.Length + 4) * 1.0) / (BUFFER_SIZE * 1.0));//分包数
+
+                /*填充每个数据包并发送*/
+                for (int i = 0; i < numOfDataChunk; i++)
+                {
+                    if (i == 0)
+                    {
+                        /*数据总长度写入第一个包*/
+                        Array.Copy(dataTotalLengthInBytes, dataChunk, dataTotalLengthInBytes.Length);
+                        /*Body写入第一个包*/
+                        Array.Copy(dataInBytes, sourceIndex, dataChunk, destinationFirstDataChunkIndex, dataChunkBodyLengh);
+                        /*发送*/
+                        int bytesSend = clientSocket.Send(dataChunk, BUFFER_SIZE, SocketFlags.None);
+
+                        /*更新包计数器*/
+                        sourceIndex += dataChunkBodyLengh;
+                    }
+                    else if (i < numOfDataChunk - 1 && i > 0)
+                    {
+                        /*数据复制*/
+                        Array.Copy(dataInBytes, sourceIndex, dataChunk, 0, BUFFER_SIZE);
+                        int bytesSend = clientSocket.Send(dataChunk, BUFFER_SIZE, SocketFlags.None);
+
+                        /*更新包计数器*/
+                        sourceIndex += BUFFER_SIZE;
+                    }
+                    else
+                    {
+                        var lastDataChunkSize = dataInBytes.Length + 4 - (numOfDataChunk - 1) * BUFFER_SIZE;
+                        byte[] dataChunk_Last = new byte[lastDataChunkSize];
+                        /*数据复制*/
+                        Array.Copy(dataInBytes, sourceIndex, dataChunk_Last, 0, lastDataChunkSize);
+                        int bytesSend = clientSocket.Send(dataChunk_Last, dataChunk_Last.Length, SocketFlags.None);
+
+                        /*更新包计数器*/
+                        sourceIndex += lastDataChunkSize;
+                    }
                 }
             }
         }

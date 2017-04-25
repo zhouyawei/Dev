@@ -133,19 +133,19 @@ namespace ChatViaSocketServer
                     {
                         /*判断包的长度*/
                         byte[] lenBytes = asyncUserToken.Buffer.GetRange(0, DATA_CHUNK_HEADER_LENGTH).ToArray();
-                        int bodyLen = IPAddress.NetworkToHostOrder(BitConverter.ToInt32(lenBytes, 0));
+                        int bodyLen = IPAddress.NetworkToHostOrder(BitConverter.ToInt32(lenBytes, 0));//包体的长度
 
                         var packageLength = DATA_CHUNK_HEADER_LENGTH + bodyLen; //一个数据包的长度，4字节包头 + 包体的长度
                         var receivedLengthExcludeHeader = asyncUserToken.Buffer.Count - DATA_CHUNK_HEADER_LENGTH; //去掉包头之后接收的长度
 
                         /*接收的数据长度不够时，退出循环，让程序继续接收*/
-                        if (bodyLen > receivedLengthExcludeHeader)
+                        if (receivedLengthExcludeHeader < bodyLen)
                         {
                             break;
                         }
 
                         /*接收的数据长度大于一个包的长度时，则提取出来，交给后面的程序去处理*/
-                        byte[] receivedBytes = asyncUserToken.Buffer.GetRange(DATA_CHUNK_HEADER_LENGTH, packageLength).ToArray();
+                        byte[] receivedBytes = asyncUserToken.Buffer.GetRange(DATA_CHUNK_HEADER_LENGTH, bodyLen).ToArray();
                         asyncUserToken.Buffer.RemoveRange(0, packageLength); /*从缓冲区重移出取出的数据*/
 
                         /*抽象数据处理方法，receivedBytes是一个完整的包*/
@@ -193,7 +193,7 @@ namespace ChatViaSocketServer
                 Array.Copy(dataInBytes, 0, buffer, 4, dataInBytes.Length); //
 
                 //token.Socket.Send(buff);  //这句也可以发送, 可根据自己的需要来选择  
-                
+
                 //将数据放置进去.  
                 Array.Copy(buffer, 0, token.SendSocketAsyncEventArgs.Buffer, 0, buffer.Length);
 
@@ -210,7 +210,7 @@ namespace ChatViaSocketServer
             // done echoing data back to the client
             AsyncUserToken asyncUserToken = socketAsyncEventArgs.UserToken as AsyncUserToken;
             if (socketAsyncEventArgs.SocketError == SocketError.Success)
-            {   
+            {
                 // read the next block of data send from the client
                 bool willRaiseEvent = asyncUserToken.Socket.ReceiveAsync(socketAsyncEventArgs);
                 if (!willRaiseEvent)
