@@ -22,8 +22,11 @@ namespace ChatViaSocketClient
             string content = GetSendData();
             byte[] messagesInBytes = Encoding.UTF8.GetBytes(content);
 
-            SendDataChunk(clientSocket, messagesInBytes);
-
+            while (true)
+            {
+                SendDataChunk(clientSocket, messagesInBytes);    
+            }
+            
             clientSocket.Close();
         }
 

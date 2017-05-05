@@ -11,7 +11,7 @@ using log4net;
 
 namespace ChatViaSocketServer
 {
-    class AsyncServer
+    abstract class AsyncServer
     {
         public AsyncServer(int numOfConnections, int receiveBufferSize = BUFFER_SIZE)
         {
@@ -88,20 +88,32 @@ namespace ChatViaSocketServer
 
         private void ProcessAccept(SocketAsyncEventArgs acceptSocketAsyncEventArgs)
         {
-            Interlocked.Increment(ref _numOfConnectedSocket);
-            _log.Info(string.Format("客户端连接成功, 当前共有{0}个客户端连接到服务器", _numOfConnectedSocket));
-
-            var userToken = _userTokenPool.Pop();
-            userToken.Socket = acceptSocketAsyncEventArgs.AcceptSocket;
-
-            bool willRaiseEvent = userToken.Socket.ReceiveAsync(userToken.ReceiveSocketAsyncEventArgs);
-            if (!willRaiseEvent)
+            try
             {
-                ProcessReceive(userToken.ReceiveSocketAsyncEventArgs);
-            }
+                Interlocked.Increment(ref _numOfConnectedSocket);
+                var userToken = _userTokenPool.Pop();
+                userToken.Socket = acceptSocketAsyncEventArgs.AcceptSocket;
+                userToken.ReceiveSocketAsyncEventArgs.AcceptSocket = acceptSocketAsyncEventArgs.AcceptSocket;
+                userToken.SendSocketAsyncEventArgs.AcceptSocket = acceptSocketAsyncEventArgs.AcceptSocket;
 
-            /*接收下一个请求*/
-            StartAccept(acceptSocketAsyncEventArgs);
+                var clientIP = userToken.Socket.RemoteEndPoint.ToString();
+                _log.Info(string.Format("客户端连接成功, 当前共有{0}个客户端连接到服务器, clientIP = {1}", _numOfConnectedSocket, clientIP));
+
+                bool willRaiseEvent = userToken.Socket.ReceiveAsync(userToken.ReceiveSocketAsyncEventArgs);
+                if (!willRaiseEvent)
+                {
+                    ProcessReceive(userToken.ReceiveSocketAsyncEventArgs);
+                }
+
+                /*接收下一个请求*/
+                StartAccept(acceptSocketAsyncEventArgs);
+            }
+            catch (Exception ex)
+            {
+                _log.ErrorFormat("AsyncServerBase->ProcessAccept出现异常, Exception = {0}", ex);
+                throw;
+
+            }
         }
 
         private void ProcessReceive(SocketAsyncEventArgs readEventArgs)
@@ -122,7 +134,7 @@ namespace ChatViaSocketServer
                     Array.Copy(readEventArgs.Buffer, readEventArgs.Offset, dataTransfered, 0, readEventArgs.BytesTransferred);
                     asyncUserToken.Buffer.AddRange(dataTransfered);
 
-                    /* 4字节包头(长度)+包体*/
+                    /* 4字节包头(长度) + 包体*/
                     /* Header + Body */
 
                     /* 接收到的数据可能小于一个包的大小，需分多次接收
@@ -192,11 +204,9 @@ namespace ChatViaSocketServer
                 Array.Copy(bodyLength, buffer, 4); //bodyLength
                 Array.Copy(dataInBytes, 0, buffer, 4, dataInBytes.Length); //
 
-                //token.Socket.Send(buff);  //这句也可以发送, 可根据自己的需要来选择  
-
                 //将数据放置进去.  
                 Array.Copy(buffer, 0, token.SendSocketAsyncEventArgs.Buffer, 0, buffer.Length);
-
+                token.SendSocketAsyncEventArgs.SetBuffer(token.SendSocketAsyncEventArgs.Offset, dataInBytes.Length + DATA_CHUNK_HEADER_LENGTH);
                 token.Socket.SendAsync(token.SendSocketAsyncEventArgs);
             }
             catch (Exception ex)
@@ -209,14 +219,19 @@ namespace ChatViaSocketServer
         {
             // done echoing data back to the client
             AsyncUserToken asyncUserToken = socketAsyncEventArgs.UserToken as AsyncUserToken;
+            var clientIP = asyncUserToken.Socket.RemoteEndPoint.ToString();
+            var currentThreadID = Thread.CurrentThread.ManagedThreadId;
+
             if (socketAsyncEventArgs.SocketError == SocketError.Success)
             {
+                _log.Debug(string.Format("AsyncServerBase->ProcessSend->发送成功, clientIP = {0}", clientIP));
+
                 // read the next block of data send from the client
-                bool willRaiseEvent = asyncUserToken.Socket.ReceiveAsync(socketAsyncEventArgs);
-                if (!willRaiseEvent)
-                {
-                    ProcessReceive(socketAsyncEventArgs);
-                }
+                //bool willRaiseEvent = asyncUserToken.Socket.ReceiveAsync(socketAsyncEventArgs);
+                //if (!willRaiseEvent)
+                //{
+                //    ProcessReceive(socketAsyncEventArgs);
+                //}
             }
             else
             {
@@ -226,22 +241,29 @@ namespace ChatViaSocketServer
 
         private void CloseClientSocket(AsyncUserToken asyncUserToken)
         {
+            string clientIP = string.Empty;
             try
             {
-                asyncUserToken.Socket.Shutdown(SocketShutdown.Send);
+                if (asyncUserToken.Socket != null)
+                {
+                    clientIP = asyncUserToken.Socket.RemoteEndPoint.ToString();
+                    asyncUserToken.Socket.Shutdown(SocketShutdown.Both);
+                    asyncUserToken.Socket.Close();
+                    asyncUserToken.Socket = null;
+                    asyncUserToken.ReceiveSocketAsyncEventArgs.AcceptSocket = null;
+                    asyncUserToken.SendSocketAsyncEventArgs.AcceptSocket = null;
+                }
             }
             catch (Exception ex)
             {
-                _log.ErrorFormat("AsyncServer->CloseClientSocket出现异常{0}", ex);
+                _log.ErrorFormat("AsyncServerBase->CloseClientSocket出现异常{0}, clientIP = {1}", ex, clientIP);
             }
-
-            asyncUserToken.Socket.Close();
 
             asyncUserToken.Reset();
 
             Interlocked.Decrement(ref _numOfConnectedSocket);
             _maxNumberOfConnectionsSemaphore.Release();
-            _log.Info(string.Format("客户端关闭了一个连接, 当前的客户端连接数为{0}", _numOfConnectedSocket));
+            _log.Info(string.Format("客户端{0}关闭了一个连接, 当前的客户端连接数为{1}", clientIP, _numOfConnectedSocket));
 
             _userTokenPool.Push(asyncUserToken);
         }
@@ -256,8 +278,9 @@ namespace ChatViaSocketServer
                 case SocketAsyncOperation.Send:
                     ProcessSend(e);
                     break;
-                default:
-                    throw new ArgumentException("The last operation completed on the socket was not a receive or send");
+                var clientIP = e.AcceptSocket.RemoteEndPoint.ToString();
+                    _log.Warn(string.Format("The last operation completed on the socket was not a receive or send, clientIp = {0}", clientIP));
+                    break;
             }
         }
 
