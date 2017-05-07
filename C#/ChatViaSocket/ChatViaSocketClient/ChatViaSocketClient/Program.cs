@@ -217,6 +217,8 @@ namespace ChatViaSocketClient
         private static void ReceiveAsync(Socket clientSocket)
         {
             SocketAsyncEventArgs readEventArgs = GetAsyncEventArgs_Spin(clientSocket);
+            (readEventArgs as MySocketAsyncEventArgs).IsReadSocketAsyncEventArgsCanBeUsedEvent.WaitOne();
+            (readEventArgs as MySocketAsyncEventArgs).IsReadSocketAsyncEventArgsCanBeUsedEvent.Reset();
             if (!clientSocket.ReceiveAsync(readEventArgs))
             {
                 ProcessReceive(readEventArgs);
@@ -281,6 +283,7 @@ namespace ChatViaSocketClient
             AsyncUserToken asyncUserToken = readEventArgs.UserToken as AsyncUserToken;
             Monitor.Enter(asyncUserToken.Locker);
             (readEventArgs as MySocketAsyncEventArgs).IsSendSocketAsyncEventArgsCanBeUsedEvent.Set();
+            (readEventArgs as MySocketAsyncEventArgs).IsReadSocketAsyncEventArgsCanBeUsedEvent.Set();
             _log.Debug("ProcessReceive->将IsSendSocketAsyncEventArgsCanBeUsedEvent置为触发状态");
 
             try
@@ -332,6 +335,9 @@ namespace ChatViaSocketClient
                         if (asyncUserToken.Buffer.Count > 0)
                         {
                             /*继续接收, 非常关键的一步*/
+                            (readEventArgs as MySocketAsyncEventArgs).IsReadSocketAsyncEventArgsCanBeUsedEvent
+                                .WaitOne();
+                            (readEventArgs as MySocketAsyncEventArgs).IsReadSocketAsyncEventArgsCanBeUsedEvent.Reset();
                             if (!asyncUserToken.Socket.ReceiveAsync(readEventArgs))
                             {
                                 ProcessReceive(readEventArgs);
@@ -523,7 +529,7 @@ namespace ChatViaSocketClient
 
         private static string GetSendData2()
         {
-            return _sendRecorder++.ToString();
+            return _sendRecorder++.ToString() + "我爱沈丹婷";
         }
 
         private static int _sendRecorder = 0;

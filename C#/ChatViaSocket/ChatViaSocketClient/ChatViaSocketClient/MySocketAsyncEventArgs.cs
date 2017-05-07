@@ -11,5 +11,6 @@ namespace ChatViaSocketClient
     class MySocketAsyncEventArgs : SocketAsyncEventArgs
     {
         public ManualResetEvent IsSendSocketAsyncEventArgsCanBeUsedEvent = new ManualResetEvent(true);
+        public ManualResetEvent IsReadSocketAsyncEventArgsCanBeUsedEvent = new ManualResetEvent(true);
     }
 }
