@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net.Sockets;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace ChatViaSocketServer
@@ -25,6 +26,8 @@ namespace ChatViaSocketServer
         public List<byte> Buffer { get { return _buffer; } }
         public SocketAsyncEventArgs ReceiveSocketAsyncEventArgs { get { return _receiveSocketAsyncEventArgs; } }
         public SocketAsyncEventArgs SendSocketAsyncEventArgs { get { return _sendSocketAsyncEventArgs; } }
+
+        public ManualResetEvent IsSendSocketAsyncEventArgsCanBeUsedEvent = new ManualResetEvent(true);
 
         private readonly List<byte> _buffer = null;
         private readonly SocketAsyncEventArgs _receiveSocketAsyncEventArgs = null;

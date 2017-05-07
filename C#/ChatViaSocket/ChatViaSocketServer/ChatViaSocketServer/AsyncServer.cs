@@ -198,15 +198,8 @@ namespace ChatViaSocketServer
             try
             {
                 /*对要发送的消息,制定简单协议,头4字节指定包的大小,方便客户端接收(协议可以自己定)*/
-                byte[] buffer = new byte[dataInBytes.Length + DATA_CHUNK_HEADER_LENGTH];
-                byte[] bodyLength = BitConverter.GetBytes(IPAddress.HostToNetworkOrder(dataInBytes.Length)); /*将body的长度转成字节数组*/
-
-                Array.Copy(bodyLength, buffer, 4); //bodyLength
-                Array.Copy(dataInBytes, 0, buffer, 4, dataInBytes.Length); //将数据放置进去.  
-                Array.Copy(buffer, 0, token.SendSocketAsyncEventArgs.Buffer, token.SendSocketAsyncEventArgs.Offset, buffer.Length);
-
-                token.SendSocketAsyncEventArgs.SetBuffer(token.SendSocketAsyncEventArgs.Offset, dataInBytes.Length + DATA_CHUNK_HEADER_LENGTH);
-                token.Socket.SendAsync(token.SendSocketAsyncEventArgs);
+                SendAsync(token, dataInBytes);
+                //SendSync(token, dataInBytes);
             }
             catch (Exception ex)
             {
@@ -214,10 +207,40 @@ namespace ChatViaSocketServer
             }
         }
 
+        private void SendAsync(AsyncUserToken token, byte[] dataInBytes)
+        {
+            byte[] buffer = new byte[dataInBytes.Length + DATA_CHUNK_HEADER_LENGTH];
+            byte[] bodyLength = BitConverter.GetBytes(IPAddress.HostToNetworkOrder(dataInBytes.Length)); /*将body的长度转成字节数组*/
+
+            Array.Copy(bodyLength, buffer, 4); //bodyLength
+            Array.Copy(dataInBytes, 0, buffer, 4, dataInBytes.Length); //将数据放置进去.  
+            Array.Copy(buffer, 0, token.SendSocketAsyncEventArgs.Buffer, token.SendSocketAsyncEventArgs.Offset, buffer.Length);
+
+            token.IsSendSocketAsyncEventArgsCanBeUsedEvent.WaitOne();
+            token.IsSendSocketAsyncEventArgsCanBeUsedEvent.Reset();
+            token.SendSocketAsyncEventArgs.SetBuffer(token.SendSocketAsyncEventArgs.Offset, dataInBytes.Length + DATA_CHUNK_HEADER_LENGTH);
+            if (!token.Socket.SendAsync(token.SendSocketAsyncEventArgs))
+            {
+                ProcessSend(token.SendSocketAsyncEventArgs);
+            }
+        }
+
+        private void SendSync(AsyncUserToken token, byte[] dataInBytes)
+        {
+            byte[] buffer = new byte[dataInBytes.Length + DATA_CHUNK_HEADER_LENGTH];
+            byte[] bodyLength = BitConverter.GetBytes(IPAddress.HostToNetworkOrder(dataInBytes.Length)); /*将body的长度转成字节数组*/
+
+            Array.Copy(bodyLength, buffer, 4); //bodyLength
+            Array.Copy(dataInBytes, 0, buffer, 4, dataInBytes.Length); //将数据放置进去.  
+            Array.Copy(buffer, 0, token.SendSocketAsyncEventArgs.Buffer, token.SendSocketAsyncEventArgs.Offset, buffer.Length);
+            token.Socket.Send(buffer);
+        }
+
         private void ProcessSend(SocketAsyncEventArgs socketAsyncEventArgs)
         {
             // done echoing data back to the client
             AsyncUserToken asyncUserToken = socketAsyncEventArgs.UserToken as AsyncUserToken;
+            asyncUserToken.IsSendSocketAsyncEventArgsCanBeUsedEvent.Set();
             var clientIP = asyncUserToken.Socket.RemoteEndPoint.ToString();
             var currentThreadID = Thread.CurrentThread.ManagedThreadId;
 
