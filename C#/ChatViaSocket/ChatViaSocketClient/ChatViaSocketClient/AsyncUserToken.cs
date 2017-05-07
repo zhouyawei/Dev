@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Sockets;
@@ -11,7 +12,7 @@ namespace ChatViaSocketClient
     {
         public AsyncUserToken()
         {
-            _buffer = new List<byte>();
+            _buffer = new MyList<byte>();
             _receiveSocketAsyncEventArgs = new SocketAsyncEventArgs();
             _sendSocketAsyncEventArgs = new SocketAsyncEventArgs();
         }
@@ -22,11 +23,12 @@ namespace ChatViaSocketClient
         }
 
         public Socket Socket { get; set; }
-        public List<byte> Buffer { get { return _buffer; } }
+        public MyList<byte> Buffer { get { return _buffer; } }
         public SocketAsyncEventArgs ReceiveSocketAsyncEventArgs { get { return _receiveSocketAsyncEventArgs; } }
         public SocketAsyncEventArgs SendSocketAsyncEventArgs { get { return _sendSocketAsyncEventArgs; } }
+        public object Locker = new object();
 
-        private readonly List<byte> _buffer = null;
+        private readonly MyList<byte> _buffer = null;
         private readonly SocketAsyncEventArgs _receiveSocketAsyncEventArgs = null;
         private readonly SocketAsyncEventArgs _sendSocketAsyncEventArgs = null;
     }

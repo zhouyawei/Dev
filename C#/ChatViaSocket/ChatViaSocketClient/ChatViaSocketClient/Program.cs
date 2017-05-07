@@ -22,7 +22,7 @@ namespace ChatViaSocketClient
             EndPoint remotEndPoint = new IPEndPoint(IPAddress.Parse(remoteIPInString), remotePort);
             clientSocket.Connect(remotEndPoint);
 
-            for (int i = 0; i < 200000; i++)
+            for (int i = 0; i < 200000000; i++)
             {
                 string content = GetSendData2();
                 byte[] messagesInBytes = Encoding.UTF8.GetBytes(content);
@@ -256,7 +256,7 @@ namespace ChatViaSocketClient
                 mySocketAsyncEventArgs.SetBuffer(new byte[BUFFER_SIZE], 0, BUFFER_SIZE);
                 mySocketAsyncEventArgs.AcceptSocket = clientSocket;
                 mySocketAsyncEventArgs.Completed += readEventArgs_Completed;
-                mySocketAsyncEventArgs.UserToken = new AsyncUserToken();
+                mySocketAsyncEventArgs.UserToken = new AsyncUserToken() { Socket = clientSocket };
                 mySocketAsyncEventArgs.IsSendSocketAsyncEventArgsCanBeUsedEvent.Reset();
                 _socketAsyncEventArgsPool.Add(mySocketAsyncEventArgs);
             }
@@ -277,72 +277,80 @@ namespace ChatViaSocketClient
 
         private static void ProcessReceive(SocketAsyncEventArgs readEventArgs)
         {
-            (readEventArgs as MySocketAsyncEventArgs).IsSendSocketAsyncEventArgsCanBeUsedEvent.Set();
-            _log.Debug("ProcessReceive->将IsUsing置为false");
-
             /*需要检查客户端是否关闭了连接*/
             AsyncUserToken asyncUserToken = readEventArgs.UserToken as AsyncUserToken;
-            if (readEventArgs.BytesTransferred > 0 && readEventArgs.SocketError == SocketError.Success)
+            Monitor.Enter(asyncUserToken.Locker);
+            (readEventArgs as MySocketAsyncEventArgs).IsSendSocketAsyncEventArgsCanBeUsedEvent.Set();
+            _log.Debug("ProcessReceive->将IsSendSocketAsyncEventArgsCanBeUsedEvent置为触发状态");
+
+            try
             {
-                Interlocked.Add(ref _totalBytesReceived, (long)readEventArgs.BytesTransferred);
-                _log.Info(string.Format("目前已接受{0}字节的数据", _totalBytesReceived));
-
-                /*读取缓冲区中的数据*/
-                /*半包, 粘包*/
-                try
+                if (readEventArgs.BytesTransferred > 0 && readEventArgs.SocketError == SocketError.Success)
                 {
-                    /*读取数据*/
-                    byte[] dataTransfered = new byte[readEventArgs.BytesTransferred];
-                    Array.Copy(readEventArgs.Buffer, readEventArgs.Offset, dataTransfered, 0, readEventArgs.BytesTransferred);
-                    asyncUserToken.Buffer.AddRange(dataTransfered);
+                    Interlocked.Add(ref _totalBytesReceived, (long)readEventArgs.BytesTransferred);
+                    _log.Info(string.Format("目前已接受{0}字节的数据", _totalBytesReceived));
 
-                    /* 4字节包头(长度) + 包体*/
-                    /* Header + Body */
-
-                    /* 接收到的数据可能小于一个包的大小，需分多次接收
-                     * 先判断包头的大小，够一个完整的包再处理
-                     */
-
-                    while (asyncUserToken.Buffer.Count > DATA_CHUNK_LENGTH_HEADER)
+                    /*读取缓冲区中的数据*/
+                    /*半包, 粘包*/
+                    try
                     {
-                        /*判断包的长度*/
-                        byte[] lenBytes = asyncUserToken.Buffer.GetRange(0, DATA_CHUNK_LENGTH_HEADER).ToArray();
-                        int bodyLen = IPAddress.NetworkToHostOrder(BitConverter.ToInt32(lenBytes, 0));//包体的长度
+                        /*读取数据*/
+                        byte[] dataTransfered = new byte[readEventArgs.BytesTransferred];
+                        Array.Copy(readEventArgs.Buffer, readEventArgs.Offset, dataTransfered, 0, readEventArgs.BytesTransferred);
+                        asyncUserToken.Buffer.AddRange(dataTransfered);
 
-                        var packageLength = DATA_CHUNK_LENGTH_HEADER + bodyLen; //一个数据包的长度，4字节包头 + 包体的长度
-                        var receivedLengthExcludeHeader = asyncUserToken.Buffer.Count - DATA_CHUNK_LENGTH_HEADER; //去掉包头之后接收的长度
+                        /* 4字节包头(长度) + 包体*/
+                        /* Header + Body */
 
-                        /*接收的数据长度不够时，退出循环，让程序继续接收*/
-                        if (receivedLengthExcludeHeader < bodyLen)
+                        /* 接收到的数据可能小于一个包的大小，需分多次接收
+                         * 先判断包头的大小，够一个完整的包再处理
+                         */
+
+                        while (asyncUserToken.Buffer.Count > DATA_CHUNK_LENGTH_HEADER)
                         {
-                            break;
+                            /*判断包的长度*/
+                            byte[] lenBytes = asyncUserToken.Buffer.GetRange(0, DATA_CHUNK_LENGTH_HEADER).ToArray();
+                            int bodyLen = IPAddress.NetworkToHostOrder(BitConverter.ToInt32(lenBytes, 0));//包体的长度
+
+                            var packageLength = DATA_CHUNK_LENGTH_HEADER + bodyLen; //一个数据包的长度，4字节包头 + 包体的长度
+                            var receivedLengthExcludeHeader = asyncUserToken.Buffer.Count - DATA_CHUNK_LENGTH_HEADER; //去掉包头之后接收的长度
+
+                            /*接收的数据长度不够时，退出循环，让程序继续接收*/
+                            if (receivedLengthExcludeHeader < bodyLen)
+                            {
+                                break;
+                            }
+
+                            /*接收的数据长度大于一个包的长度时，则提取出来，交给后面的程序去处理*/
+                            byte[] receivedBytes = asyncUserToken.Buffer.GetRange(DATA_CHUNK_LENGTH_HEADER, bodyLen).ToArray();
+                            asyncUserToken.Buffer.RemoveRange(0, packageLength); /*从缓冲区重移出取出的数据*/
+
+                            /*抽象数据处理方法，receivedBytes是一个完整的包*/
+                            ProcessData(asyncUserToken, receivedBytes);
                         }
 
-                        /*接收的数据长度大于一个包的长度时，则提取出来，交给后面的程序去处理*/
-                        byte[] receivedBytes = asyncUserToken.Buffer.GetRange(DATA_CHUNK_LENGTH_HEADER, bodyLen).ToArray();
-                        asyncUserToken.Buffer.RemoveRange(0, packageLength); /*从缓冲区重移出取出的数据*/
-
-                        /*抽象数据处理方法，receivedBytes是一个完整的包*/
-                        ProcessData(asyncUserToken, receivedBytes);
+                        if (asyncUserToken.Buffer.Count > 0)
+                        {
+                            /*继续接收, 非常关键的一步*/
+                            if (!asyncUserToken.Socket.ReceiveAsync(readEventArgs))
+                            {
+                                ProcessReceive(readEventArgs);
+                            }
+                        }
                     }
-
-                    if (asyncUserToken.Buffer.Count > 0)
+                    catch (Exception ex)
                     {
-                        /*继续接收, 非常关键的一步*/
-                        if (!asyncUserToken.Socket.ReceiveAsync(readEventArgs))
-                        {
-                            ProcessReceive(readEventArgs);
-                        }
+                        _log.ErrorFormat("Program->ProcessReceive出现异常, Exception = {0}", ex);
                     }
                 }
-                catch (Exception ex)
+                else
                 {
-                    _log.ErrorFormat("Program->ProcessReceive出现异常, Exception = {0}", ex);
+                    CloseClientSocket(asyncUserToken);
                 }
             }
-            else
+            finally 
             {
-                CloseClientSocket(asyncUserToken);
+                Monitor.Exit(asyncUserToken.Locker);
             }
         }
 
