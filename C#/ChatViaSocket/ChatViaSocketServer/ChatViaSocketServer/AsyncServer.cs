@@ -199,13 +199,12 @@ namespace ChatViaSocketServer
             {
                 /*对要发送的消息,制定简单协议,头4字节指定包的大小,方便客户端接收(协议可以自己定)*/
                 byte[] buffer = new byte[dataInBytes.Length + DATA_CHUNK_HEADER_LENGTH];
-                byte[] bodyLength = BitConverter.GetBytes(dataInBytes.Length); /*将body的长度转成字节数组*/
+                byte[] bodyLength = BitConverter.GetBytes(IPAddress.HostToNetworkOrder(dataInBytes.Length)); /*将body的长度转成字节数组*/
 
                 Array.Copy(bodyLength, buffer, 4); //bodyLength
-                Array.Copy(dataInBytes, 0, buffer, 4, dataInBytes.Length); //
+                Array.Copy(dataInBytes, 0, buffer, 4, dataInBytes.Length); //将数据放置进去.  
+                Array.Copy(buffer, 0, token.SendSocketAsyncEventArgs.Buffer, token.SendSocketAsyncEventArgs.Offset, buffer.Length);
 
-                //将数据放置进去.  
-                Array.Copy(buffer, 0, token.SendSocketAsyncEventArgs.Buffer, 0, buffer.Length);
                 token.SendSocketAsyncEventArgs.SetBuffer(token.SendSocketAsyncEventArgs.Offset, dataInBytes.Length + DATA_CHUNK_HEADER_LENGTH);
                 token.Socket.SendAsync(token.SendSocketAsyncEventArgs);
             }
@@ -278,6 +277,7 @@ namespace ChatViaSocketServer
                 case SocketAsyncOperation.Send:
                     ProcessSend(e);
                     break;
+                default:
                 var clientIP = e.AcceptSocket.RemoteEndPoint.ToString();
                     _log.Warn(string.Format("The last operation completed on the socket was not a receive or send, clientIp = {0}", clientIP));
                     break;

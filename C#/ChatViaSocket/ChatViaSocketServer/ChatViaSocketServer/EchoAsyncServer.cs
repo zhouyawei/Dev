@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+using log4net;
 
 namespace ChatViaSocketServer
 {
@@ -21,9 +23,13 @@ namespace ChatViaSocketServer
             var msg = Encoding.UTF8.GetString(receivedBytes);
             _stringBuilder.Append(msg);
 
-            Console.Write(msg);
+            Console.WriteLine(msg);
+            base.SendData(asyncUserToken, receivedBytes);
+
+            _log.Debug(string.Format("EchoAsyncServer->ProcessData: msg = {0}", msg));
         }
 
         StringBuilder _stringBuilder = new StringBuilder();
+        private ILog _log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
     }
 }

@@ -17,7 +17,6 @@ namespace ChatViaSocketServer
             AsyncServer server = new EchoAsyncServer(1000);
             server.Init();
             server.Start(GetIPEndPoint());
-
         }
 
         private static IPEndPoint GetIPEndPoint()

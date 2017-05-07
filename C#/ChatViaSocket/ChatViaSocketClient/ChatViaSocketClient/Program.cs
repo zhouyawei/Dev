@@ -1,10 +1,13 @@
-﻿using System;
+﻿using log4net;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace ChatViaSocketClient
@@ -19,14 +22,14 @@ namespace ChatViaSocketClient
             EndPoint remotEndPoint = new IPEndPoint(IPAddress.Parse(remoteIPInString), remotePort);
             clientSocket.Connect(remotEndPoint);
 
-            string content = GetSendData();
-            byte[] messagesInBytes = Encoding.UTF8.GetBytes(content);
-
-            while (true)
+            for (int i = 0; i < 10000; i++)
             {
-                SendDataChunk(clientSocket, messagesInBytes);    
+                string content = GetSendData2();
+                byte[] messagesInBytes = Encoding.UTF8.GetBytes(content);
+                SendDataChunk(clientSocket, messagesInBytes);
+                ReceiveAsync(clientSocket);
             }
-            
+
             clientSocket.Close();
         }
 
@@ -150,6 +153,206 @@ namespace ChatViaSocketClient
                     }
                 }
             }
+        }
+
+        private static void Receive(Socket clientSocket)
+        {
+            byte[] buffer = new byte[BUFFER_SIZE];
+
+            int dataChunkBodyMaxLength = BUFFER_SIZE - 4;//包的数据长度
+            int totalBytesRead = 0;
+
+            int bytesRead = clientSocket.Receive(buffer);
+            totalBytesRead += bytesRead;
+
+            byte[] dataTotalLengthInBytes = new byte[DATA_CHUNK_LENGTH_HEADER];
+            Array.Copy(buffer, dataTotalLengthInBytes, DATA_CHUNK_LENGTH_HEADER);
+            int dataTotalLength = IPAddress.NetworkToHostOrder(BitConverter.ToInt32(dataTotalLengthInBytes, 0));
+
+            int sourceIndex = 0;
+            int destinationIndex = 4;
+
+            int dataChunkBodyActualLength = bytesRead < BUFFER_SIZE
+                ? bytesRead - DATA_CHUNK_LENGTH_HEADER
+                : BUFFER_SIZE - DATA_CHUNK_LENGTH_HEADER;
+
+            /*得到第一个包中的内容*/
+            byte[] dataChunkFirstBody = new byte[dataChunkBodyActualLength];
+            Array.Copy(buffer, destinationIndex, dataChunkFirstBody, sourceIndex, dataChunkBodyActualLength);
+            List<byte> dataInBytes = new List<byte>();
+            dataInBytes.AddRange(dataChunkFirstBody);
+
+            /*读取分包*/
+            int numOfDataChunk = (int)Math.Ceiling(((dataTotalLength + DATA_CHUNK_LENGTH_HEADER) * 1.0) / (BUFFER_SIZE * 1.0));//分包数
+            byte[] dataChunkBody = new byte[dataChunkBodyMaxLength];
+            dataChunkBodyActualLength = BUFFER_SIZE;/*第二个包开始全是包的body*/
+
+            for (int i = 1; i < numOfDataChunk; i++)
+            {
+                bytesRead = clientSocket.Receive(buffer);
+                totalBytesRead += bytesRead;
+
+                if (i < numOfDataChunk - 1)
+                {
+                    /*得到每个包中的内容*/
+                    Array.Copy(buffer, 0, dataChunkBody, sourceIndex, dataChunkBodyActualLength);
+                    dataInBytes.AddRange(dataChunkBody);
+                }
+                else
+                {
+                    /*计算最后一个包的长度*/
+                    int lastDataChunkLength = dataTotalLength + DATA_CHUNK_LENGTH_HEADER - BUFFER_SIZE * (numOfDataChunk - 1);
+                    byte[] dataChunkLastBody = new byte[lastDataChunkLength];
+                    /*得到最后一个包的内容*/
+                    Array.Copy(buffer, 0, dataChunkLastBody, sourceIndex, lastDataChunkLength);
+                    dataInBytes.AddRange(dataChunkLastBody);
+                }
+            }
+
+            string message = Encoding.UTF8.GetString(dataInBytes.ToArray(), 0, dataInBytes.Count);
+
+            Console.WriteLine(message);
+        }
+
+        private static void ReceiveAsync(Socket clientSocket)
+        {
+            SocketAsyncEventArgs readEventArgs = GetAsyncEventArgs(clientSocket);
+            if (!clientSocket.ReceiveAsync(readEventArgs))
+            {
+                ProcessReceive(readEventArgs);
+            }
+        }
+
+        private static SocketAsyncEventArgs GetAsyncEventArgs(Socket clientSocket)
+        {
+            var mySocketAsyncEventArgs = _socketAsyncEventArgsPool.FirstOrDefault(x => !x.IsUsing);
+            if (mySocketAsyncEventArgs == null)
+            {
+                mySocketAsyncEventArgs = new MySocketAsyncEventArgs();
+                mySocketAsyncEventArgs.SetBuffer(new byte[BUFFER_SIZE], 0, BUFFER_SIZE);
+                mySocketAsyncEventArgs.AcceptSocket = clientSocket;
+                mySocketAsyncEventArgs.Completed += readEventArgs_Completed;
+                mySocketAsyncEventArgs.UserToken = new AsyncUserToken();
+                _socketAsyncEventArgsPool.Add(mySocketAsyncEventArgs);
+
+                _log.Info(string.Format("GetAsyncEventArgs: _socketAsyncEventArgsPool有{0}个对象", _socketAsyncEventArgsPool.Count));
+            }
+            else
+            {
+                _log.Info("GetAsyncEventArgs: SocketAsyncEventArgs被重用");
+            }
+
+            mySocketAsyncEventArgs.IsUsing = true;
+
+            return mySocketAsyncEventArgs;
+        }
+
+        static void readEventArgs_Completed(object sender, SocketAsyncEventArgs e)
+        {
+            ProcessReceive(e);
+        }
+
+        private static void ProcessReceive(SocketAsyncEventArgs readEventArgs)
+        {
+            (readEventArgs as MySocketAsyncEventArgs).IsUsing = false;
+
+            /*需要检查客户端是否关闭了连接*/
+            AsyncUserToken asyncUserToken = readEventArgs.UserToken as AsyncUserToken;
+            if (readEventArgs.BytesTransferred > 0 && readEventArgs.SocketError == SocketError.Success)
+            {
+                Interlocked.Add(ref _totalBytesReceived, (long)readEventArgs.BytesTransferred);
+                _log.Info(string.Format("目前已接受{0}字节的数据", _totalBytesReceived));
+
+                /*读取缓冲区中的数据*/
+                /*半包, 粘包*/
+                try
+                {
+                    /*读取数据*/
+                    byte[] dataTransfered = new byte[readEventArgs.BytesTransferred];
+                    Array.Copy(readEventArgs.Buffer, readEventArgs.Offset, dataTransfered, 0, readEventArgs.BytesTransferred);
+                    asyncUserToken.Buffer.AddRange(dataTransfered);
+
+                    /* 4字节包头(长度) + 包体*/
+                    /* Header + Body */
+
+                    /* 接收到的数据可能小于一个包的大小，需分多次接收
+                     * 先判断包头的大小，够一个完整的包再处理
+                     */
+
+                    while (asyncUserToken.Buffer.Count > DATA_CHUNK_LENGTH_HEADER)
+                    {
+                        /*判断包的长度*/
+                        byte[] lenBytes = asyncUserToken.Buffer.GetRange(0, DATA_CHUNK_LENGTH_HEADER).ToArray();
+                        int bodyLen = IPAddress.NetworkToHostOrder(BitConverter.ToInt32(lenBytes, 0));//包体的长度
+
+                        var packageLength = DATA_CHUNK_LENGTH_HEADER + bodyLen; //一个数据包的长度，4字节包头 + 包体的长度
+                        var receivedLengthExcludeHeader = asyncUserToken.Buffer.Count - DATA_CHUNK_LENGTH_HEADER; //去掉包头之后接收的长度
+
+                        /*接收的数据长度不够时，退出循环，让程序继续接收*/
+                        if (receivedLengthExcludeHeader < bodyLen)
+                        {
+                            break;
+                        }
+
+                        /*接收的数据长度大于一个包的长度时，则提取出来，交给后面的程序去处理*/
+                        byte[] receivedBytes = asyncUserToken.Buffer.GetRange(DATA_CHUNK_LENGTH_HEADER, bodyLen).ToArray();
+                        asyncUserToken.Buffer.RemoveRange(0, packageLength); /*从缓冲区重移出取出的数据*/
+
+                        /*抽象数据处理方法，receivedBytes是一个完整的包*/
+                        ProcessData(asyncUserToken, receivedBytes);
+                    }
+
+                    if (asyncUserToken.Buffer.Count > 0)
+                    {
+                        /*继续接收, 非常关键的一步*/
+                        if (!asyncUserToken.Socket.ReceiveAsync(readEventArgs))
+                        {
+                            ProcessReceive(readEventArgs);
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _log.ErrorFormat("Program->ProcessReceive出现异常, Exception = {0}", ex);
+                }
+            }
+            else
+            {
+                CloseClientSocket(asyncUserToken);
+            }
+        }
+
+        /*抽象数据处理方法，receivedBytes是一个完整的包*/
+        protected static void ProcessData(AsyncUserToken asyncUserToken, byte[] receivedBytes)
+        {
+            string message = Encoding.UTF8.GetString(receivedBytes, 0, receivedBytes.Length);
+
+            Console.WriteLine(message);
+
+            _log.Info(string.Format("ProcessData: message = {0}", message));
+        }
+
+        private static void CloseClientSocket(AsyncUserToken asyncUserToken)
+        {
+            string clientIP = string.Empty;
+            try
+            {
+                if (asyncUserToken.Socket != null)
+                {
+                    clientIP = asyncUserToken.Socket.RemoteEndPoint.ToString();
+                    asyncUserToken.Socket.Shutdown(SocketShutdown.Both);
+                    asyncUserToken.Socket.Close();
+                    asyncUserToken.Socket = null;
+                    asyncUserToken.ReceiveSocketAsyncEventArgs.AcceptSocket = null;
+                    asyncUserToken.SendSocketAsyncEventArgs.AcceptSocket = null;
+                }
+            }
+            catch (Exception ex)
+            {
+                _log.ErrorFormat("AsyncServerBase->CloseClientSocket出现异常{0}, clientIP = {1}", ex, clientIP);
+            }
+
+            asyncUserToken.Reset();
         }
 
         private static string GetSendData()
@@ -286,6 +489,18 @@ namespace ChatViaSocketClient
             return t;
         }
 
+        private static string GetSendData2()
+        {
+            return _sendRecorder++.ToString();
+        }
+
+        private static int _sendRecorder = 0;
+        private static long _totalBytesReceived = 0;
+        private static ILog _log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        private static List<MySocketAsyncEventArgs> _socketAsyncEventArgsPool = new List<MySocketAsyncEventArgs>();
+        private static object _locker = new object();
+
         private const int BUFFER_SIZE = 4096;
+        private const int DATA_CHUNK_LENGTH_HEADER = 4;
     }
 }

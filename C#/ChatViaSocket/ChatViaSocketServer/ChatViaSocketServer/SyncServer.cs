@@ -21,7 +21,15 @@ namespace ChatViaSocketServer
 
             /*解析第一个包*/
             Socket clientSocket = serverSocket.Accept();
+            ProcessReceive(clientSocket);
+            
+            clientSocket.Close();
 
+            serverSocket.Close();
+        }
+
+        private static void ProcessReceive(Socket clientSocket)
+        {
             byte[] buffer = new byte[BUFFER_SIZE];
 
             int dataChunkBodyMaxLength = BUFFER_SIZE - 4;//包的数据长度
@@ -85,10 +93,6 @@ namespace ChatViaSocketServer
             string message = Encoding.UTF8.GetString(dataInBytes.ToArray(), 0, dataInBytes.Count);
 
             Console.WriteLine(message);
-
-            clientSocket.Close();
-
-            serverSocket.Close();
         }
 
         private const int BUFFER_SIZE = 4096;
