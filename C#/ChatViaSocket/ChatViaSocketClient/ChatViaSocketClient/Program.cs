@@ -1,6 +1,7 @@
 ﻿using log4net;
 using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Diagnostics;
 using System.Linq;
 using System.Net;
@@ -18,9 +19,9 @@ namespace ChatViaSocketClient
         static void Main(string[] args)
         {
             Socket clientSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-            int remotePort = 1569;
-            string remoteIPInString = "127.0.0.1";
-            EndPoint remotEndPoint = new IPEndPoint(IPAddress.Parse(remoteIPInString), remotePort);
+            int remotePort = int.Parse(_remoteServerIP);
+            var remoteIP = IPAddress.Parse(_remoteServerIP);
+            EndPoint remotEndPoint = new IPEndPoint(remoteIP, remotePort);
             clientSocket.Connect(remotEndPoint);
 
             ReceiveAsync(clientSocket);
@@ -33,6 +34,9 @@ namespace ChatViaSocketClient
             }
 
             clientSocket.Close();
+
+            Console.WriteLine("测试完成");
+            Console.Read();
         }
 
         /// <summary>
@@ -504,6 +508,8 @@ namespace ChatViaSocketClient
         private static ILog _log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private static List<AsyncUserToken> _asyncUserTokenPool = new List<AsyncUserToken>();
         private static object _locker = new object();
+        private static string _remoteServerIP = ConfigurationManager.AppSettings["RemoteServerIP"];
+        private static string _remoteServerPort = ConfigurationManager.AppSettings["RemoteServerPort"];
 
         private const int BUFFER_SIZE = 4096;
         private const int DATA_CHUNK_LENGTH_HEADER = 4;
