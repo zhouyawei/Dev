@@ -2,6 +2,7 @@
 using System.CodeDom;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Configuration;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
@@ -21,10 +22,13 @@ namespace ChatViaSocketServer
 
         private static IPEndPoint GetIPEndPoint()
         {
+            var listenPort = int.Parse(_listenPort);
             IPAddress ipAddress = IPAddress.Any;
-            IPEndPoint ipEndPoint = new IPEndPoint(ipAddress, 1569);
+            IPEndPoint ipEndPoint = new IPEndPoint(ipAddress, listenPort);
 
             return ipEndPoint;
         }
+
+        private static string _listenPort = ConfigurationManager.AppSettings["ListenPort"];
     }
 }
