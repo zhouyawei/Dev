@@ -27,7 +27,7 @@ namespace ChatViaSocketServer
         public SocketAsyncEventArgs ReceiveSocketAsyncEventArgs { get { return _receiveSocketAsyncEventArgs; } }
         public SocketAsyncEventArgs SendSocketAsyncEventArgs { get { return _sendSocketAsyncEventArgs; } }
 
-        public ManualResetEvent IsSendSocketAsyncEventArgsCanBeUsedEvent = new ManualResetEvent(true);
+        public AutoResetEvent IsSendSocketAsyncEventArgsCanBeUsedEvent = new AutoResetEvent(true);
 
         private readonly List<byte> _buffer = null;
         private readonly SocketAsyncEventArgs _receiveSocketAsyncEventArgs = null;

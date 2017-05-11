@@ -220,36 +220,11 @@ namespace ChatViaSocketClient
         {
             var userToken = GetAsyncUserToken(clientSocket);
             SocketAsyncEventArgs readEventArgs = userToken.ReceiveSocketAsyncEventArgs;
-            /*userToken.IsReadSocketAsyncEventArgsCanBeUsedEvent.WaitOne();*/
             if (!clientSocket.ReceiveAsync(readEventArgs))
             {
                 ProcessReceive(readEventArgs);
             }
         }
-
-        //private static SocketAsyncEventArgs GetAsyncEventArgs(Socket clientSocket)
-        //{
-        //    var mySocketAsyncEventArgs = _socketAsyncEventArgsPool.FirstOrDefault(x => !x.IsUsing);
-        //    if (mySocketAsyncEventArgs == null)
-        //    {
-        //        mySocketAsyncEventArgs = new MySocketAsyncEventArgs();
-        //        mySocketAsyncEventArgs.SetBuffer(new byte[BUFFER_SIZE], 0, BUFFER_SIZE);
-        //        mySocketAsyncEventArgs.AcceptSocket = clientSocket;
-        //        mySocketAsyncEventArgs.Completed += readEventArgs_Completed;
-        //        mySocketAsyncEventArgs.UserToken = new AsyncUserToken();
-        //        _socketAsyncEventArgsPool.Add(mySocketAsyncEventArgs);
-
-        //        _log.Info(string.Format("GetAsyncEventArgs: _socketAsyncEventArgsPool有{0}个对象", _socketAsyncEventArgsPool.Count));
-        //    }
-        //    else
-        //    {
-        //        _log.Info("GetAsyncEventArgs: SocketAsyncEventArgs被重用");
-        //    }
-
-        //    mySocketAsyncEventArgs.IsSendSocketAsyncEventArgsCanBeUsedEvent.Reset();
-
-        //    return mySocketAsyncEventArgs;
-        //}
 
         private static AsyncUserToken GetAsyncUserToken(Socket clientSocket)
         {
@@ -278,15 +253,12 @@ namespace ChatViaSocketClient
                 ProcessReceive(e);
             }
         }
-    
+
         private static void ProcessReceive(SocketAsyncEventArgs readEventArgs)
         {
             /*需要检查客户端是否关闭了连接*/
             AsyncUserToken asyncUserToken = readEventArgs.UserToken as AsyncUserToken;
-            //Monitor.Enter(asyncUserToken.Locker);
-            //asyncUserToken.IsReadSocketAsyncEventArgsCanBeUsedEvent.Set();
-            _log.Debug("ProcessReceive->将IsSendSocketAsyncEventArgsCanBeUsedEvent置为触发状态");
-
+            
             try
             {
                 if (readEventArgs.BytesTransferred > 0 && readEventArgs.SocketError == SocketError.Success)
@@ -333,15 +305,11 @@ namespace ChatViaSocketClient
                             ProcessData(asyncUserToken, receivedBytes);
                         }
 
-                        /*if (asyncUserToken.Buffer.Count > 0)
-                        {*/
-                            /*继续接收, 非常关键的一步*/
-                            /*asyncUserToken.IsReadSocketAsyncEventArgsCanBeUsedEvent.WaitOne();*/
-                            if (asyncUserToken.Socket != null && !asyncUserToken.Socket.ReceiveAsync(readEventArgs))
-                            {
-                                ProcessReceive(readEventArgs);
-                            }
-                        /*}*/
+                        /*继续接收, 非常关键的一步*/
+                        if (asyncUserToken.Socket != null && !asyncUserToken.Socket.ReceiveAsync(readEventArgs))
+                        {
+                            ProcessReceive(readEventArgs);
+                        }
                     }
                     catch (Exception ex)
                     {
@@ -353,9 +321,9 @@ namespace ChatViaSocketClient
                     CloseClientSocket(asyncUserToken);
                 }
             }
-            finally 
+            finally
             {
-                //Monitor.Exit(asyncUserToken.Locker);
+                
             }
         }
 

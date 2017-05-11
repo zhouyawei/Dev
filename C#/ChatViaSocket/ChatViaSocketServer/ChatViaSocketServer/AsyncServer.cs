@@ -217,7 +217,6 @@ namespace ChatViaSocketServer
             Array.Copy(buffer, 0, token.SendSocketAsyncEventArgs.Buffer, token.SendSocketAsyncEventArgs.Offset, buffer.Length);
 
             token.IsSendSocketAsyncEventArgsCanBeUsedEvent.WaitOne();
-            token.IsSendSocketAsyncEventArgsCanBeUsedEvent.Reset();
             token.SendSocketAsyncEventArgs.SetBuffer(token.SendSocketAsyncEventArgs.Offset, dataInBytes.Length + DATA_CHUNK_HEADER_LENGTH);
             if (!token.Socket.SendAsync(token.SendSocketAsyncEventArgs))
             {

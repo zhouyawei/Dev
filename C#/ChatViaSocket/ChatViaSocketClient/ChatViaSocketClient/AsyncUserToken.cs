@@ -29,8 +29,7 @@ namespace ChatViaSocketClient
         public MyList<byte> Buffer { get { return _buffer; } }
         public SocketAsyncEventArgs ReceiveSocketAsyncEventArgs { get { return _receiveSocketAsyncEventArgs; } }
         public SocketAsyncEventArgs SendSocketAsyncEventArgs { get { return _sendSocketAsyncEventArgs; } }
-        public AutoResetEvent IsReadSocketAsyncEventArgsCanBeUsedEvent = new AutoResetEvent(true);
-
+        
         private readonly MyList<byte> _buffer = null;
         private readonly SocketAsyncEventArgs _receiveSocketAsyncEventArgs = null;
         private readonly SocketAsyncEventArgs _sendSocketAsyncEventArgs = null;
