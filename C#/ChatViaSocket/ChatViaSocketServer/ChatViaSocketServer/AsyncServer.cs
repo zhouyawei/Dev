@@ -165,7 +165,7 @@ namespace ChatViaSocketServer
                     }
 
                     /*继续接收, 非常关键的一步*/
-                    if (!asyncUserToken.Socket.ReceiveAsync(readEventArgs))
+                    if (asyncUserToken.Socket != null && !asyncUserToken.Socket.ReceiveAsync(readEventArgs))
                     {
                         this.ProcessReceive(readEventArgs);
                     }

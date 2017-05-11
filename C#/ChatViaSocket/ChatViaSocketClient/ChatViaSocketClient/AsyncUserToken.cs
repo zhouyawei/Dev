@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net.Sockets;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace ChatViaSocketClient
@@ -15,6 +16,8 @@ namespace ChatViaSocketClient
             _buffer = new MyList<byte>();
             _receiveSocketAsyncEventArgs = new SocketAsyncEventArgs();
             _sendSocketAsyncEventArgs = new SocketAsyncEventArgs();
+            _receiveSocketAsyncEventArgs.UserToken = this;
+            _sendSocketAsyncEventArgs.UserToken = this;
         }
 
         public void Reset()
@@ -26,7 +29,7 @@ namespace ChatViaSocketClient
         public MyList<byte> Buffer { get { return _buffer; } }
         public SocketAsyncEventArgs ReceiveSocketAsyncEventArgs { get { return _receiveSocketAsyncEventArgs; } }
         public SocketAsyncEventArgs SendSocketAsyncEventArgs { get { return _sendSocketAsyncEventArgs; } }
-        public object Locker = new object();
+        public AutoResetEvent IsReadSocketAsyncEventArgsCanBeUsedEvent = new AutoResetEvent(true);
 
         private readonly MyList<byte> _buffer = null;
         private readonly SocketAsyncEventArgs _receiveSocketAsyncEventArgs = null;

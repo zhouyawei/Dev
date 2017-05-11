@@ -1,6 +1,7 @@
 ﻿using log4net;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
@@ -22,12 +23,13 @@ namespace ChatViaSocketClient
             EndPoint remotEndPoint = new IPEndPoint(IPAddress.Parse(remoteIPInString), remotePort);
             clientSocket.Connect(remotEndPoint);
 
+            ReceiveAsync(clientSocket);
             for (int i = 0; i < 200000000; i++)
             {
                 string content = GetSendData2();
                 byte[] messagesInBytes = Encoding.UTF8.GetBytes(content);
                 SendDataChunk(clientSocket, messagesInBytes);
-                ReceiveAsync(clientSocket);
+                //ReceiveAsync(clientSocket);
             }
 
             clientSocket.Close();
@@ -216,9 +218,9 @@ namespace ChatViaSocketClient
 
         private static void ReceiveAsync(Socket clientSocket)
         {
-            SocketAsyncEventArgs readEventArgs = GetAsyncEventArgs_Spin(clientSocket);
-            (readEventArgs as MySocketAsyncEventArgs).IsReadSocketAsyncEventArgsCanBeUsedEvent.WaitOne();
-            (readEventArgs as MySocketAsyncEventArgs).IsReadSocketAsyncEventArgsCanBeUsedEvent.Reset();
+            var userToken = GetAsyncUserToken(clientSocket);
+            SocketAsyncEventArgs readEventArgs = userToken.ReceiveSocketAsyncEventArgs;
+            /*userToken.IsReadSocketAsyncEventArgsCanBeUsedEvent.WaitOne();*/
             if (!clientSocket.ReceiveAsync(readEventArgs))
             {
                 ProcessReceive(readEventArgs);
@@ -249,41 +251,40 @@ namespace ChatViaSocketClient
         //    return mySocketAsyncEventArgs;
         //}
 
-        private static SocketAsyncEventArgs GetAsyncEventArgs_Spin(Socket clientSocket)
+        private static AsyncUserToken GetAsyncUserToken(Socket clientSocket)
         {
-            MySocketAsyncEventArgs mySocketAsyncEventArgs = null;
-            if (_socketAsyncEventArgsPool.Count == 0)
+            AsyncUserToken userToken = null;
+            if (_asyncUserTokenPool.Count == 0)
             {
-                mySocketAsyncEventArgs = new MySocketAsyncEventArgs();
-                mySocketAsyncEventArgs.SetBuffer(new byte[BUFFER_SIZE], 0, BUFFER_SIZE);
-                mySocketAsyncEventArgs.AcceptSocket = clientSocket;
-                mySocketAsyncEventArgs.Completed += readEventArgs_Completed;
-                mySocketAsyncEventArgs.UserToken = new AsyncUserToken() { Socket = clientSocket };
-                mySocketAsyncEventArgs.IsSendSocketAsyncEventArgsCanBeUsedEvent.Reset();
-                _socketAsyncEventArgsPool.Add(mySocketAsyncEventArgs);
+                userToken = new AsyncUserToken() { Socket = clientSocket };
+
+                userToken.ReceiveSocketAsyncEventArgs.SetBuffer(new byte[BUFFER_SIZE], 0, BUFFER_SIZE);
+                userToken.ReceiveSocketAsyncEventArgs.AcceptSocket = clientSocket;
+                userToken.ReceiveSocketAsyncEventArgs.Completed += IO_Completed;
+                _asyncUserTokenPool.Add(userToken);
             }
             else
             {
-                mySocketAsyncEventArgs = _socketAsyncEventArgsPool[0];
-                mySocketAsyncEventArgs.IsSendSocketAsyncEventArgsCanBeUsedEvent.WaitOne();
-                mySocketAsyncEventArgs.IsSendSocketAsyncEventArgsCanBeUsedEvent.Reset();
+                userToken = _asyncUserTokenPool[0];
             }
 
-            return mySocketAsyncEventArgs;
+            return userToken;
         }
 
-        static void readEventArgs_Completed(object sender, SocketAsyncEventArgs e)
+        static void IO_Completed(object sender, SocketAsyncEventArgs e)
         {
-            ProcessReceive(e);
+            if (e.LastOperation == SocketAsyncOperation.Receive)
+            {
+                ProcessReceive(e);
+            }
         }
-
+    
         private static void ProcessReceive(SocketAsyncEventArgs readEventArgs)
         {
             /*需要检查客户端是否关闭了连接*/
             AsyncUserToken asyncUserToken = readEventArgs.UserToken as AsyncUserToken;
-            Monitor.Enter(asyncUserToken.Locker);
-            (readEventArgs as MySocketAsyncEventArgs).IsSendSocketAsyncEventArgsCanBeUsedEvent.Set();
-            (readEventArgs as MySocketAsyncEventArgs).IsReadSocketAsyncEventArgsCanBeUsedEvent.Set();
+            //Monitor.Enter(asyncUserToken.Locker);
+            //asyncUserToken.IsReadSocketAsyncEventArgsCanBeUsedEvent.Set();
             _log.Debug("ProcessReceive->将IsSendSocketAsyncEventArgsCanBeUsedEvent置为触发状态");
 
             try
@@ -332,17 +333,15 @@ namespace ChatViaSocketClient
                             ProcessData(asyncUserToken, receivedBytes);
                         }
 
-                        if (asyncUserToken.Buffer.Count > 0)
-                        {
+                        /*if (asyncUserToken.Buffer.Count > 0)
+                        {*/
                             /*继续接收, 非常关键的一步*/
-                            (readEventArgs as MySocketAsyncEventArgs).IsReadSocketAsyncEventArgsCanBeUsedEvent
-                                .WaitOne();
-                            (readEventArgs as MySocketAsyncEventArgs).IsReadSocketAsyncEventArgsCanBeUsedEvent.Reset();
-                            if (!asyncUserToken.Socket.ReceiveAsync(readEventArgs))
+                            /*asyncUserToken.IsReadSocketAsyncEventArgsCanBeUsedEvent.WaitOne();*/
+                            if (asyncUserToken.Socket != null && !asyncUserToken.Socket.ReceiveAsync(readEventArgs))
                             {
                                 ProcessReceive(readEventArgs);
                             }
-                        }
+                        /*}*/
                     }
                     catch (Exception ex)
                     {
@@ -356,7 +355,7 @@ namespace ChatViaSocketClient
             }
             finally 
             {
-                Monitor.Exit(asyncUserToken.Locker);
+                //Monitor.Exit(asyncUserToken.Locker);
             }
         }
 
@@ -529,13 +528,13 @@ namespace ChatViaSocketClient
 
         private static string GetSendData2()
         {
-            return _sendRecorder++.ToString() + "我爱沈丹婷";
+            return _sendRecorder++.ToString();
         }
 
         private static int _sendRecorder = 0;
         private static long _totalBytesReceived = 0;
         private static ILog _log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-        private static List<MySocketAsyncEventArgs> _socketAsyncEventArgsPool = new List<MySocketAsyncEventArgs>();
+        private static List<AsyncUserToken> _asyncUserTokenPool = new List<AsyncUserToken>();
         private static object _locker = new object();
 
         private const int BUFFER_SIZE = 4096;
