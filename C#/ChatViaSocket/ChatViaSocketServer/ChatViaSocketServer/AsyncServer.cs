@@ -236,7 +236,6 @@ namespace ChatViaSocketServer
 
             Array.Copy(bodyLength, buffer, 4); //bodyLength
             Array.Copy(dataInBytes, 0, buffer, 4, dataInBytes.Length); //将数据放置进去.  
-            Array.Copy(buffer, 0, token.SendSocketAsyncEventArgs.Buffer, token.SendSocketAsyncEventArgs.Offset, buffer.Length);
             token.Socket.Send(buffer);
         }
 
