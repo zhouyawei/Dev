@@ -46,7 +46,7 @@ namespace ChatViaSocketClient
 
                 //ReceiveAsync(clientSocket);
 
-                Thread.Sleep(300);
+                Thread.Sleep(_sendInterval);
             }
 
             clientSocket.Close();
@@ -535,6 +535,7 @@ namespace ChatViaSocketClient
         private object _locker = new object();
         private string _remoteServerIP = ConfigurationManager.AppSettings["RemoteServerIP"];
         private string _remoteServerPort = ConfigurationManager.AppSettings["RemoteServerPort"];
+        private int _sendInterval = int.Parse(ConfigurationManager.AppSettings["SendInterval"]);
 
         private const int BUFFER_SIZE = 4096;
         private const int DATA_CHUNK_LENGTH_HEADER = 4;

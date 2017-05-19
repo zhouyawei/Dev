@@ -15,7 +15,7 @@ namespace ChatViaSocketServer
     {
         static void Main(string[] args)
         {
-            AsyncServer server = new EchoAsyncServer(1000);
+            AsyncServer server = new EchoAsyncServer(_maxClientNum);
             server.Init();
             server.Start(GetIPEndPoint());
         }
@@ -30,5 +30,6 @@ namespace ChatViaSocketServer
         }
 
         private static string _listenPort = ConfigurationManager.AppSettings["ListenPort"];
+        private static int _maxClientNum = int.Parse(ConfigurationManager.AppSettings["MaxClientNum"]);
     }
 }
