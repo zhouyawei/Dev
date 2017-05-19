@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace ChatViaSocketClient
 {
-    class AsyncUserToken
+    public class AsyncUserToken
     {
         public AsyncUserToken()
         {

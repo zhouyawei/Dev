@@ -96,7 +96,12 @@ namespace ChatViaSocketServer
                 userToken.ReceiveSocketAsyncEventArgs.AcceptSocket = acceptSocketAsyncEventArgs.AcceptSocket;
                 userToken.SendSocketAsyncEventArgs.AcceptSocket = acceptSocketAsyncEventArgs.AcceptSocket;
 
-                var clientIP = userToken.Socket.RemoteEndPoint.ToString();
+                string clientIP = string.Empty;
+                if (userToken.Socket != null)
+                {
+                    clientIP = userToken.Socket.RemoteEndPoint.ToString();
+                }
+
                 _log.Info(string.Format("客户端连接成功, 当前共有{0}个客户端连接到服务器, clientIP = {1}", _numOfConnectedSocket, clientIP));
 
                 bool willRaiseEvent = userToken.Socket.ReceiveAsync(userToken.ReceiveSocketAsyncEventArgs);
@@ -240,7 +245,12 @@ namespace ChatViaSocketServer
             // done echoing data back to the client
             AsyncUserToken asyncUserToken = socketAsyncEventArgs.UserToken as AsyncUserToken;
             asyncUserToken.IsSendSocketAsyncEventArgsCanBeUsedEvent.Set();
-            var clientIP = asyncUserToken.Socket.RemoteEndPoint.ToString();
+            string clientIP = string.Empty;
+            if (asyncUserToken.Socket != null)
+            {
+                clientIP = asyncUserToken.Socket.RemoteEndPoint.ToString();
+            }
+
             var currentThreadID = Thread.CurrentThread.ManagedThreadId;
 
             if (socketAsyncEventArgs.SocketError == SocketError.Success)
@@ -274,19 +284,19 @@ namespace ChatViaSocketServer
                     asyncUserToken.ReceiveSocketAsyncEventArgs.AcceptSocket = null;
                     asyncUserToken.SendSocketAsyncEventArgs.AcceptSocket = null;
                 }
+
+                asyncUserToken.Reset();
+
+                Interlocked.Decrement(ref _numOfConnectedSocket);
+                _maxNumberOfConnectionsSemaphore.Release();
+                _log.Info(string.Format("客户端{0}关闭了一个连接, 当前的客户端连接数为{1}", clientIP, _numOfConnectedSocket));
+
+                _userTokenPool.Push(asyncUserToken);
             }
             catch (Exception ex)
             {
                 _log.ErrorFormat("AsyncServerBase->CloseClientSocket出现异常{0}, clientIP = {1}", ex, clientIP);
             }
-
-            asyncUserToken.Reset();
-
-            Interlocked.Decrement(ref _numOfConnectedSocket);
-            _maxNumberOfConnectionsSemaphore.Release();
-            _log.Info(string.Format("客户端{0}关闭了一个连接, 当前的客户端连接数为{1}", clientIP, _numOfConnectedSocket));
-
-            _userTokenPool.Push(asyncUserToken);
         }
 
         private void IO_Completed(object sender, SocketAsyncEventArgs e)
@@ -300,7 +310,11 @@ namespace ChatViaSocketServer
                     ProcessSend(e);
                     break;
                 default:
-                var clientIP = e.AcceptSocket.RemoteEndPoint.ToString();
+                    string clientIP = string.Empty;
+                    if (e.AcceptSocket != null)
+                    {
+                        e.AcceptSocket.RemoteEndPoint.ToString();
+                    }
                     _log.Warn(string.Format("The last operation completed on the socket was not a receive or send, clientIp = {0}", clientIP));
                     break;
             }

@@ -48,6 +48,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AsyncClient.cs" />
     <Compile Include="AsyncUserToken.cs" />
     <Compile Include="MyList.cs" />
     <Compile Include="Program.cs" />
