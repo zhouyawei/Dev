@@ -116,8 +116,6 @@ namespace ChatViaSocketServer
             catch (Exception ex)
             {
                 _log.ErrorFormat("AsyncServerBase->ProcessAccept出现异常, Exception = {0}", ex);
-                throw;
-
             }
         }
 
@@ -170,9 +168,25 @@ namespace ChatViaSocketServer
                     }
 
                     /*继续接收, 非常关键的一步*/
-                    if (asyncUserToken.Socket != null && !asyncUserToken.Socket.ReceiveAsync(readEventArgs))
+                    if (asyncUserToken.Socket != null)
                     {
-                        this.ProcessReceive(readEventArgs);
+                        if (asyncUserToken.Socket.Connected)
+                        {
+                            if (!asyncUserToken.Socket.ReceiveAsync(readEventArgs))
+                            {
+                                this.ProcessReceive(readEventArgs);
+                            }
+                        }
+                        else
+                        {
+                            string clientIP = string.Empty;
+                            if (asyncUserToken.Socket != null)
+                            {
+                                clientIP = asyncUserToken.Socket.RemoteEndPoint.ToString();
+                            }
+
+                            _log.Debug(string.Format("AsyncServerBase->ProcessReceive: 已断开与远程客户端的连接, clientIP = {0}", clientIP));
+                        }
                     }
                 }
                 catch (Exception ex)
@@ -195,16 +209,32 @@ namespace ChatViaSocketServer
         /*对数据进行打包,然后再发送, dataInBytes是一个完整的数据包*/
         public void SendData(AsyncUserToken token, byte[] dataInBytes)
         {
-            if (token == null || token.Socket == null || !token.Socket.Connected)
+            if (token == null)
             {
+                _log.Info("AsyncServer->SendData: 发送未完成, token为空");
+                return;
+            }
+            else if (token.Socket == null)
+            {
+                _log.Info("AsyncServer->SendData: 发送未完成, token.Socket为空");
+                return;
+            }
+            else if (!token.Socket.Connected)
+            {
+                string clientIP = string.Empty;
+                if (token.Socket != null)
+                {
+                    clientIP = token.Socket.RemoteEndPoint.ToString();
+                }
+                _log.Info(string.Format("AsyncServer->SendData: 发送未完成, token.Socket.Connected未连接到远程客户端, clientIP = {0}", clientIP));
                 return;
             }
 
             try
             {
                 /*对要发送的消息,制定简单协议,头4字节指定包的大小,方便客户端接收(协议可以自己定)*/
-                SendAsync(token, dataInBytes);
-                //SendSync(token, dataInBytes);
+                //SendAsync(token, dataInBytes);
+                SendSync(token, dataInBytes);
             }
             catch (Exception ex)
             {

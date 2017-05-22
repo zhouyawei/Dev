@@ -6,8 +6,10 @@ using System.Configuration;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+using log4net;
 
 namespace ChatViaSocketServer
 {
@@ -15,9 +17,16 @@ namespace ChatViaSocketServer
     {
         static void Main(string[] args)
         {
-            AsyncServer server = new EchoAsyncServer(_maxClientNum);
-            server.Init();
-            server.Start(GetIPEndPoint());
+            try
+            {
+                AsyncServer server = new EchoAsyncServer(_maxClientNum);
+                server.Init();
+                server.Start(GetIPEndPoint());
+            }
+            catch (Exception e)
+            {
+                _log.ErrorFormat("Program->Main出现异常, Exception = {0}", e);
+            }
         }
 
         private static IPEndPoint GetIPEndPoint()
@@ -29,6 +38,7 @@ namespace ChatViaSocketServer
             return ipEndPoint;
         }
 
+        private static ILog _log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private static string _listenPort = ConfigurationManager.AppSettings["ListenPort"];
         private static int _maxClientNum = int.Parse(ConfigurationManager.AppSettings["MaxClientNum"]);
     }
