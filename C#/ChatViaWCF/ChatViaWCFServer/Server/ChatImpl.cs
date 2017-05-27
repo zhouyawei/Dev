@@ -11,6 +11,7 @@ using log4net;
 
 namespace ChatViaWCFServer.Server
 {
+    [ServiceBehavior(InstanceContextMode = InstanceContextMode.PerCall)]
     class ChatImpl : IChat
     {
         static ChatImpl()
