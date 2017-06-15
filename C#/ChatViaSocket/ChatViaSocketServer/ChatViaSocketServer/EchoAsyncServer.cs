@@ -21,15 +21,13 @@ namespace ChatViaSocketServer
             base.ProcessData(asyncUserToken, receivedBytes);
 
             var msg = Encoding.UTF8.GetString(receivedBytes);
-            _stringBuilder.Append(msg);
-
+            
             Console.WriteLine(msg);
             base.SendData(asyncUserToken, receivedBytes);
 
             _log.Debug(string.Format("EchoAsyncServer->ProcessData: msg = {0}", msg));
         }
 
-        StringBuilder _stringBuilder = new StringBuilder();
         private ILog _log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
     }
 }

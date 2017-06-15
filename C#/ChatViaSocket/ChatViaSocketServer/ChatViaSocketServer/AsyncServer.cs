@@ -234,7 +234,36 @@ namespace ChatViaSocketServer
             {
                 /*对要发送的消息,制定简单协议,头4字节指定包的大小,方便客户端接收(协议可以自己定)*/
                 //SendAsync(token, dataInBytes);
-                SendSync(token, dataInBytes);
+                //SendSync(token, dataInBytes);
+
+                /*发的包长度过大，则分包发送*/
+                byte[] buffer = new byte[dataInBytes.Length + DATA_CHUNK_HEADER_LENGTH];
+                byte[] bodyLength = BitConverter.GetBytes(IPAddress.HostToNetworkOrder(dataInBytes.Length)); /*将body的长度转成字节数组*/
+
+                Array.Copy(bodyLength, buffer, 4); //bodyLength
+                Array.Copy(dataInBytes, 0, buffer, 4, dataInBytes.Length); //将数据放置进去.  
+
+                if (buffer.Length <= BUFFER_SIZE)
+                {
+                    token.Socket.Send(buffer);
+                }
+                else
+                {
+                    byte[] byteArrayTemp = buffer;
+                    while (true)
+                    {
+                        byte[] dataToSend = byteArrayTemp.Take(BUFFER_SIZE).ToArray();
+                        if (dataToSend.Length > 0)
+                        {
+                            token.Socket.Send(dataToSend);
+                        }
+                        else
+                        {
+                            break;
+                        }
+                        byteArrayTemp = byteArrayTemp.Skip(BUFFER_SIZE).ToArray();
+                    }
+                }
             }
             catch (Exception ex)
             {

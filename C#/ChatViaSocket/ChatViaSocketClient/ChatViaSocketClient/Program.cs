@@ -18,7 +18,7 @@ namespace ChatViaSocketClient
     {
         static void Main(string[] args)
         {
-            for (int i = 0; i < 500; i++)
+            for (int i = 0; i < _connectionNo; i++)
             {
                 AsyncClient asyncClient = new AsyncClient() { Name = "客户端_" + i.ToString() };
                 ThreadPool.QueueUserWorkItem((x) =>
@@ -30,5 +30,7 @@ namespace ChatViaSocketClient
 
             Console.Read();
         }
+
+        private static int _connectionNo = int.Parse(ConfigurationManager.AppSettings["ConnectionNO"]);
     }
 }

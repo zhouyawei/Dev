@@ -37,18 +37,23 @@ namespace ChatViaSocketClient
             clientSocket.Connect(remotEndPoint);
 
             ReceiveAsync(clientSocket);
-            for (int i = 0; i < 200000000; i++)
+            for (long i = 0; i < long.MaxValue; i++)
             {
                 string content = GetSendData2();
                 byte[] messagesInBytes = Encoding.UTF8.GetBytes(content);
 
+                var t1 = DateTime.Now;
                 SendDataChunk(clientSocket, messagesInBytes);
+                var t2 = DateTime.Now;
+                var costTime = t2 - t1;
+                Console.WriteLine(string.Format("发送耗时 {0} ms", costTime.TotalMilliseconds));
 
                 //ReceiveAsync(clientSocket);
 
                 Thread.Sleep(_sendInterval);
             }
 
+            Console.Read();
             clientSocket.Close();
         }
 

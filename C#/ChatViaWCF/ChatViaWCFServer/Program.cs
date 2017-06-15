@@ -58,14 +58,14 @@ namespace ChatViaWCFServer
                         var url = dispatcher.Listener.Uri.ToString();
                         var info = string.Format("Url = {0}, BusyCount = {1}", url, busyCount);
                         Console.WriteLine(info);
-                        Thread.Sleep(5000);
-
+                       
                         //if (Console.ReadKey().Key == ConsoleKey.Escape)
                         //{
                         //    serviceHost.Close();
                         //    break;
                         //}
                     }
+                    Thread.Sleep(5000);
                 }
             }
             catch (Exception e)
