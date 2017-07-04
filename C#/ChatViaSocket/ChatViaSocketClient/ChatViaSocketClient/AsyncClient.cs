@@ -307,7 +307,7 @@ namespace ChatViaSocketClient
                         /*读取数据*/
                         byte[] dataTransfered = new byte[readEventArgs.BytesTransferred];
                         Array.Copy(readEventArgs.Buffer, readEventArgs.Offset, dataTransfered, 0, readEventArgs.BytesTransferred);
-                        asyncUserToken.Buffer.AddRange(dataTransfered);
+                        asyncUserToken.ReceiveBuffer.AddRange(dataTransfered);
 
                         /* 4字节包头(长度) + 包体*/
                         /* Header + Body */
@@ -316,14 +316,14 @@ namespace ChatViaSocketClient
                          * 先判断包头的大小，够一个完整的包再处理
                          */
 
-                        while (asyncUserToken.Buffer.Count > DATA_CHUNK_LENGTH_HEADER)
+                        while (asyncUserToken.ReceiveBuffer.Count > DATA_CHUNK_LENGTH_HEADER)
                         {
                             /*判断包的长度*/
-                            byte[] lenBytes = asyncUserToken.Buffer.GetRange(0, DATA_CHUNK_LENGTH_HEADER).ToArray();
+                            byte[] lenBytes = asyncUserToken.ReceiveBuffer.GetRange(0, DATA_CHUNK_LENGTH_HEADER).ToArray();
                             int bodyLen = IPAddress.NetworkToHostOrder(BitConverter.ToInt32(lenBytes, 0));//包体的长度
 
                             var packageLength = DATA_CHUNK_LENGTH_HEADER + bodyLen; //一个数据包的长度，4字节包头 + 包体的长度
-                            var receivedLengthExcludeHeader = asyncUserToken.Buffer.Count - DATA_CHUNK_LENGTH_HEADER; //去掉包头之后接收的长度
+                            var receivedLengthExcludeHeader = asyncUserToken.ReceiveBuffer.Count - DATA_CHUNK_LENGTH_HEADER; //去掉包头之后接收的长度
 
                             /*接收的数据长度不够时，退出循环，让程序继续接收*/
                             if (receivedLengthExcludeHeader < bodyLen)
@@ -332,8 +332,8 @@ namespace ChatViaSocketClient
                             }
 
                             /*接收的数据长度大于一个包的长度时，则提取出来，交给后面的程序去处理*/
-                            byte[] receivedBytes = asyncUserToken.Buffer.GetRange(DATA_CHUNK_LENGTH_HEADER, bodyLen).ToArray();
-                            asyncUserToken.Buffer.RemoveRange(0, packageLength); /*从缓冲区重移出取出的数据*/
+                            byte[] receivedBytes = asyncUserToken.ReceiveBuffer.GetRange(DATA_CHUNK_LENGTH_HEADER, bodyLen).ToArray();
+                            asyncUserToken.ReceiveBuffer.RemoveRange(0, packageLength); /*从缓冲区重移出取出的数据*/
 
                             /*抽象数据处理方法，receivedBytes是一个完整的包*/
                             ProcessData(asyncUserToken, receivedBytes);
@@ -394,7 +394,7 @@ namespace ChatViaSocketClient
             asyncUserToken.Reset();
         }
 
-        private string GetSendData()
+        public static string GetSendData()
         {
             var t = @"编者按：本文来自微信公众号“游戏葡萄”（ID：youxiputao）， 作者托马斯之颅
 

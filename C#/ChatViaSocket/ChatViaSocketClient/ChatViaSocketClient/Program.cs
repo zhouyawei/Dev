@@ -18,16 +18,34 @@ namespace ChatViaSocketClient
     {
         static void Main(string[] args)
         {
+            //for (int i = 0; i < _connectionNo; i++)
+            //{
+            //    AsyncClient asyncClient = new AsyncClient() { Name = "客户端_" + i.ToString() };
+            //    ThreadPool.QueueUserWorkItem((x) =>
+            //    {
+            //        asyncClient.SendTestData();
+            //    });
+
+            //}
+
+            List<SimpleTCPClient> clients = new List<SimpleTCPClient>();
             for (int i = 0; i < _connectionNo; i++)
             {
-                AsyncClient asyncClient = new AsyncClient() { Name = "客户端_" + i.ToString() };
-                ThreadPool.QueueUserWorkItem((x) =>
-                {
-                    asyncClient.SendTestData();
-                });
+                SimpleTCPClient asyncClient = new SimpleTCPClient("客户端_" + i.ToString());
+                clients.Add(asyncClient);
 
+                asyncClient.Initialize();
+                asyncClient.RunAsync();
             }
 
+            while (true)
+            {
+                foreach (var simpleTcpClient in clients)
+                {
+                    simpleTcpClient.SendTestData();
+                }    
+            }
+            
             Console.Read();
         }
 
