@@ -347,7 +347,9 @@ namespace ChatViaSocketServer
 
                 Interlocked.Decrement(ref _numOfConnectedSocket);
                 _maxNumberOfConnectionsSemaphore.Release();
-                _log.Info(string.Format("客户端{0}关闭了一个连接, 当前的客户端连接数为{1}", clientIP, _numOfConnectedSocket));
+                var msg = string.Format("客户端{0}关闭了一个连接, 当前的客户端连接数为{1}", clientIP, _numOfConnectedSocket);
+                _log.Info(msg);
+                Console.WriteLine(msg);
 
                 _userTokenPool.Push(asyncUserToken);
             }

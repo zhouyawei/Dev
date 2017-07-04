@@ -14,9 +14,9 @@ using System.Threading.Tasks;
 
 namespace ChatViaSocketClient
 {
-    class Program
+    public static class Program
     {
-        static void Main(string[] args)
+        public static void Main(string[] args)
         {
             //for (int i = 0; i < _connectionNo; i++)
             //{
@@ -43,6 +43,7 @@ namespace ChatViaSocketClient
                 foreach (var simpleTcpClient in clients)
                 {
                     simpleTcpClient.SendTestData();
+                    Thread.Sleep(TimeSpan.FromTicks(100));
                 }    
             }
             
