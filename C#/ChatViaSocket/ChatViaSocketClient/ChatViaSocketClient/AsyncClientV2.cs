@@ -106,7 +106,7 @@ namespace ChatViaSocketClient
                     _asyncUserToken.SendSocketAsyncEventArgs.SetBuffer(0, dataToSend.Length);
                     _asyncUserToken.SendAutoResetEvent.Set();
                     _asyncUserToken.SendAutoResetEvent.WaitOne();
-                    if (!_asyncUserToken.Socket.SendAsync(_asyncUserToken.SendSocketAsyncEventArgs))
+                    if (_asyncUserToken.Socket != null && !_asyncUserToken.Socket.SendAsync(_asyncUserToken.SendSocketAsyncEventArgs))
                     {
                         _asyncUserToken.SendAutoResetEvent.Set();
                     }

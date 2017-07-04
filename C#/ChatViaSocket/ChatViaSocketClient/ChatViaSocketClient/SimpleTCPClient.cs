@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -35,13 +36,15 @@ namespace ChatViaSocketClient
             Console.WriteLine(msg);
             //base.SendData(receivedDataInBytes);
 
-            _log.Debug(string.Format("SimpleTCPClient->DataReceived: msg = {0}", msg));
+            var msg2 = string.Format("SimpleTCPClient->DataReceived: _name = {0}, msg = {1}", _name, msg);
+            _log.Debug(msg2);
+            //Debug.WriteLine(msg2);
         }
 
         private string GetSendData2()
         {
-            //return _sendRecorder++.ToString();
-            return "我是中国人!";
+            return _sendRecorder++.ToString();
+            //return "我是中国人!";
         }
 
         private ILog _log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
