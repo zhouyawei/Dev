@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -28,7 +29,17 @@ namespace WPFClient
 
         private void StartTestButton_OnClick(object sender, RoutedEventArgs e)
         {
-            Program.Main(null);
+            try
+            {
+                ThreadPool.QueueUserWorkItem((x) =>
+                {
+                    Program.Main(null);
+                });
+            }
+            catch (Exception exception)
+            {
+                MessageBox.Show(exception.ToString());
+            }
         }
     }
 }
