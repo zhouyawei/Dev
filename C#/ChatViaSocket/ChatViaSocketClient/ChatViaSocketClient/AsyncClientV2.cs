@@ -102,7 +102,6 @@ namespace ChatViaSocketClient
 
             while (_asyncUserToken.SendBuffer.Count > 0)
             {
-
                 var size = Math.Min(_asyncUserToken.SendBuffer.Count, BUFFER_SIZE);
                 byte[] dataToSend = _asyncUserToken.SendBuffer.GetRange(0, size).ToArray();
                 _asyncUserToken.SendBuffer.RemoveRange(0, size);

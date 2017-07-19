@@ -53,7 +53,7 @@ namespace ChatViaSocketClient
                 }
 
                 //Thread.Sleep(TimeSpan.FromTicks(100000));
-                Thread.Sleep(500);
+                Thread.Sleep(1000);
             }
             
         }
