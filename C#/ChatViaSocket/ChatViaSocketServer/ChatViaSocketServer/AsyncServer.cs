@@ -336,7 +336,7 @@ namespace ChatViaSocketServer
                 if (asyncUserToken.Socket != null)
                 {
                     clientIP = asyncUserToken.Socket.RemoteEndPoint.ToString();
-                    asyncUserToken.Socket.Shutdown(SocketShutdown.Both);
+                    asyncUserToken.Socket.Shutdown(SocketShutdown.Send);
                     asyncUserToken.Socket.Close();
                     asyncUserToken.Socket = null;
                     asyncUserToken.ReceiveSocketAsyncEventArgs.AcceptSocket = null;

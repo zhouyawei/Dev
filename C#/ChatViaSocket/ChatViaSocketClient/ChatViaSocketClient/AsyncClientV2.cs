@@ -6,6 +6,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Reflection;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using log4net;
 
@@ -15,7 +16,7 @@ namespace ChatViaSocketClient
     {
         protected AsyncClientV2Base()
         {
-            AppDomain.CurrentDomain.ProcessExit += CurrentDomain_ProcessExit;
+            
         }
 
         public void Initialize()
@@ -56,6 +57,14 @@ namespace ChatViaSocketClient
              * 4字节Header + Body
              */
 
+            if(_asyncUserToken.Socket == null)
+                return;
+
+            while (_asyncUserToken.Socket != null && !_asyncUserToken.Socket.Connected)
+            {
+                Thread.Sleep(100);
+            }
+
             int sendBufferSize = dataToSendInBytes.Length + DATA_CHUNK_LENGTH_HEADER;
             byte[] sendBuffer = new byte[sendBufferSize];
 
@@ -77,8 +86,6 @@ namespace ChatViaSocketClient
             }*/
 
             /*ProcessSend();*/
-
-            IsConnected = true;
 
             if (_asyncUserToken.Socket != null && !_asyncUserToken.Socket.ReceiveAsync(_asyncUserToken.ReceiveSocketAsyncEventArgs))
             {
@@ -125,7 +132,7 @@ namespace ChatViaSocketClient
                 AfterSend();
             }*/
 
-            if (_asyncUserToken.ReceiveSocketAsyncEventArgs.BytesTransferred != 0)
+            if (_asyncUserToken.ReceiveSocketAsyncEventArgs.BytesTransferred != 0 && _asyncUserToken.ReceiveSocketAsyncEventArgs.SocketError == SocketError.Success)
             {
                 byte[] tempBuffer = new byte[_asyncUserToken.ReceiveSocketAsyncEventArgs.BytesTransferred];
                 Array.Copy(_asyncUserToken.ReceiveSocketAsyncEventArgs.Buffer, tempBuffer, tempBuffer.Length);
@@ -166,7 +173,7 @@ namespace ChatViaSocketClient
             }
         }
 
-        private void CloseClientSocket()
+        public void CloseClientSocket()
         {
             string clientIP = string.Empty;
             try
@@ -174,7 +181,7 @@ namespace ChatViaSocketClient
                 if (_asyncUserToken.Socket != null)
                 {
                     clientIP = _asyncUserToken.Socket.RemoteEndPoint.ToString();
-                    _asyncUserToken.Socket.Shutdown(SocketShutdown.Both);
+                    _asyncUserToken.Socket.Shutdown(SocketShutdown.Send);
                     _asyncUserToken.Socket.Close();
                     _asyncUserToken.Socket = null;
                     _asyncUserToken.ReceiveSocketAsyncEventArgs.AcceptSocket = null;
@@ -187,8 +194,6 @@ namespace ChatViaSocketClient
             }
 
             _asyncUserToken.Reset();
-
-            IsConnected = false;
         }
 
         private void IO_Completed(object sender, SocketAsyncEventArgs e)
@@ -208,16 +213,6 @@ namespace ChatViaSocketClient
                     break;
             }
         }
-
-        private void CurrentDomain_ProcessExit(object sender, EventArgs e)
-        {
-            if (IsConnected)
-            {
-                CloseClientSocket();
-            }
-        }
-
-        public bool IsConnected = false;
 
         private string _remoteServerIP = ConfigurationManager.AppSettings["RemoteServerIP"];
         private string _remoteServerPort = ConfigurationManager.AppSettings["RemoteServerPort"];

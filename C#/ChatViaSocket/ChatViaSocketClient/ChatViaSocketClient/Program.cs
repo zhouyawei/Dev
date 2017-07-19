@@ -16,7 +16,7 @@ namespace ChatViaSocketClient
 {
     public static class Program
     {
-        public static void Main(string[] args)
+        public static void Start(string[] args)
         {
             //for (int i = 0; i < _connectionNo; i++)
             //{
@@ -28,28 +28,47 @@ namespace ChatViaSocketClient
 
             //}
 
-            List<SimpleTCPClient> clients = new List<SimpleTCPClient>();
+            _isStop = false;
+
+            if (_clients.Count > 0)
+            {
+                _clients.Clear();
+            }
+
             for (int i = 0; i < _connectionNo; i++)
             {
                 SimpleTCPClient asyncClient = new SimpleTCPClient("客户端_" + i.ToString());
-                clients.Add(asyncClient);
+                _clients.Add(asyncClient);
 
                 asyncClient.Initialize();
                 asyncClient.RunAsync();
             }
 
-            while (true)
+            while (!_isStop)
             {
-                foreach (var simpleTcpClient in clients)
+                foreach (var simpleTcpClient in _clients)
                 {
                     simpleTcpClient.SendTestData();
-                    Thread.Sleep(TimeSpan.FromTicks(100));
-                }    
+                    
+                }
+
+                //Thread.Sleep(TimeSpan.FromTicks(100000));
+                Thread.Sleep(500);
             }
             
-            Console.Read();
         }
 
+        public static void Stop()
+        {
+            _isStop = true;
+            foreach (var simpleTcpClient in _clients)
+            {
+                simpleTcpClient.CloseClientSocket();
+            }
+        }
+
+        private static List<SimpleTCPClient> _clients = new List<SimpleTCPClient>();
+        private static bool _isStop = false;
         private static int _connectionNo = int.Parse(ConfigurationManager.AppSettings["ConnectionNO"]);
     }
 }

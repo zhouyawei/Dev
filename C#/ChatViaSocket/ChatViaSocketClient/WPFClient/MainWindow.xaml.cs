@@ -33,13 +33,18 @@ namespace WPFClient
             {
                 ThreadPool.QueueUserWorkItem((x) =>
                 {
-                    Program.Main(null);
+                    Program.Start(null);
                 });
             }
             catch (Exception exception)
             {
                 MessageBox.Show(exception.ToString());
             }
+        }
+
+        private void StopTestButton_OnClick(object sender, RoutedEventArgs e)
+        {
+            Program.Stop();
         }
     }
 }

@@ -19,11 +19,6 @@ namespace ChatViaSocketClient
 
         public void SendTestData()
         {
-            if (!IsConnected)
-            {
-                Thread.Sleep(10);
-            }
-
             string content = GetSendData2();//AsyncClient.GetSendData();//
             byte[] messagesInBytes = Encoding.UTF8.GetBytes(content);
             base.SendData(messagesInBytes);
