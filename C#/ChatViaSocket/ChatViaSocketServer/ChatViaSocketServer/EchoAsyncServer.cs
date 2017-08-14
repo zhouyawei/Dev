@@ -18,14 +18,14 @@ namespace ChatViaSocketServer
 
         protected override void ProcessData(AsyncUserToken asyncUserToken, byte[] receivedBytes)
         {
-            base.ProcessData(asyncUserToken, receivedBytes);
+            //base.ProcessData(asyncUserToken, receivedBytes);
 
-            var msg = Encoding.UTF8.GetString(receivedBytes);
+            //var msg = Encoding.UTF8.GetString(receivedBytes);
             
-            Console.WriteLine(msg);
+            //Console.WriteLine(msg);
             base.SendData(asyncUserToken, receivedBytes);
 
-            _log.Debug(string.Format("EchoAsyncServer->ProcessData: msg = {0}", msg));
+            //_log.Debug(string.Format("EchoAsyncServer->ProcessData: msg = {0}", msg));
         }
 
         private ILog _log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
